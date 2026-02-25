@@ -13,7 +13,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
-public class User {
+public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,6 +30,9 @@ public class User {
     @ManyToMany(fetch = FetchType.EAGER)
     private Set<Role> roles;
 
+    @OneToMany(mappedBy = "owner",cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Device> devices;
+
     public void addRole(Role role) {
         if (this.roles == null) {
             this.roles = new HashSet<>();
@@ -40,4 +43,18 @@ public class User {
     public void removeRole(Role role) {
         this.roles.remove(role);
     }
+
+    public void addDevice(Device device) {
+        if (this.devices == null) {
+            this.devices = new HashSet<>();
+        }
+        this.devices.add(device);
+        device.setOwner(this);
+    }
+
+    public void removeDevice(Device device) {
+        this.devices.remove(device);
+        device.setOwner(null);
+    }
+
 }
