@@ -8,6 +8,7 @@ import example.web.securehome.mapper.RegisterMapper;
 import example.web.securehome.repository.RoleRepository;
 import example.web.securehome.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ public class AuthService {
         User request = registerMapper.toUserEntity(dto);
         Role userRole = roleRepository.findByRoleNameContainsIgnoreCase("user");
         request.addRole(userRole);
+        request.setPassword(new BCryptPasswordEncoder().encode(dto.getPassword()));
         User saved = userRepository.save(request);
         return registerMapper.toRegisterResponseDto(saved);
     }
