@@ -6,4 +6,8 @@ spring:
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
+
+jwt:
+  secret: ${SECRET_KEY}
+  expiration: ${EXPIRATION_TIME}
