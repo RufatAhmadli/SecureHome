@@ -9,5 +9,5 @@ spring:
       ddl-auto: update
 
 jwt:
-  secret: "SSBhbSBraWxsaW5nIG15c2VsZiBkYXkgYnkgZGF5"
-  expiration: 1200000L
+  secret: ${SECRET_KEY}
+  expiration: ${EXPIRATION_TIME}
