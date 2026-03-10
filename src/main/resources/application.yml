@@ -6,4 +6,8 @@ spring:
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
+
+jwt:
+  secret: "SSBhbSBraWxsaW5nIG15c2VsZiBkYXkgYnkgZGF5"
+  expiration: 1200000L
