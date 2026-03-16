@@ -27,9 +27,11 @@ public class Home extends BaseEntity {
     private String timezone;
 
     @OneToMany(mappedBy = "home", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<Room> rooms = new HashSet<>();
 
     @OneToMany(mappedBy = "home", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<HomeMember> members = new HashSet<>();
 
 

@@ -25,11 +25,11 @@ public class HomeMember extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private HomeMemberRole role;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "home_id", nullable = false)
     private Home home;
 

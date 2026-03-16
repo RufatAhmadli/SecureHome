@@ -23,11 +23,12 @@ public class Room extends BaseEntity {
 
     private String description;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "home_id", nullable = false)
     private Home home;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<Device> devices = new HashSet<>();
 
     public void addDevice(Device device) {
