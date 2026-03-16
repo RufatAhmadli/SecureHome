@@ -49,7 +49,8 @@ public class UserProfileService {
 
     @Transactional
     public void deleteUserProfileById(Long id) {
-        if (!userProfileRepository.existsById(id)) throw new ProfileNotFoundException(id);
-        userProfileRepository.deleteById(id);
+        UserProfile userProfile = userProfileRepository.findById(id)
+                .orElseThrow(() -> new ProfileNotFoundException(id));
+        userProfileRepository.delete(userProfile);
     }
 }

@@ -33,7 +33,7 @@ public class AuthService {
     public RegisterResponseDto register(RegisterRequestDto dto) {
         User request = registerMapper.toUserEntity(dto);
         Role userRole = roleRepository.findByRoleNameContainsIgnoreCase("user")
-                .orElseThrow(() -> new RoleNotFoundException("Role not found"));
+                .orElseThrow(() -> new RoleNotFoundException("user"));
         request.addRole(userRole);
         request.setPassword(new BCryptPasswordEncoder().encode(dto.getPassword()));
         User saved = userRepository.save(request);
