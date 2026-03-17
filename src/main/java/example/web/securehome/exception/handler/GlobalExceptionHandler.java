@@ -1,7 +1,7 @@
 package example.web.securehome.exception.handler;
 
-import example.web.securehome.exception.custom.ProfileNotFoundException;
-import example.web.securehome.exception.custom.RoleNotFoundException;
+import example.web.securehome.entity.Home;
+import example.web.securehome.exception.custom.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({ProfileNotFoundException.class, RoleNotFoundException.class})
-    public ResponseEntity<ErrorResponse> handleProfileNotFoundException(ProfileNotFoundException ex) {
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponse.of(ex.getMessage(), HttpStatus.NOT_FOUND));
@@ -26,7 +26,26 @@ public class GlobalExceptionHandler {
                         HttpStatus.UNAUTHORIZED));
     }
 
+    @ExceptionHandler(MemberAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleMemberAlreadyExistsException(MemberAlreadyExistsException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(ex.getMessage(), HttpStatus.CONFLICT));
+    }
 
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(ex.getMessage(), HttpStatus.FORBIDDEN));
+    }
+
+    @ExceptionHandler(MemberHomeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleMemberHomeMismatchException(MemberHomeMismatchException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of(ex.getMessage(), HttpStatus.BAD_REQUEST));
+    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {

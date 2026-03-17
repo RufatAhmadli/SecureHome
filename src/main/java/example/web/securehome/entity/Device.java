@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@Inheritance(strategy =  InheritanceType.JOINED)
+@Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "devices")
 public abstract class Device extends BaseEntity {
     @Id
@@ -40,7 +40,7 @@ public abstract class Device extends BaseEntity {
 
     private LocalDateTime lastSeenAt;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id",nullable = false)
-    private User owner;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "room_id", nullable = false)
+    private Room room;
 }

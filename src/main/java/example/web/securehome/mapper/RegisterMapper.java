@@ -16,7 +16,6 @@ public interface RegisterMapper {
     @Mapping(target = "userProfile", ignore = true)
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "devices", ignore = true)
     @Mapping(target = "password",ignore = true)
     User toUserEntity(RegisterRequestDto registerRequestDto);
 
@@ -27,7 +26,6 @@ public interface RegisterMapper {
     @Mapping(target = "userProfile", ignore = true)
     @Mapping(target = "roles", ignore = true)
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "devices", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "createdBy", ignore = true)

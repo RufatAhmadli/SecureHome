@@ -33,11 +33,7 @@ public class User extends BaseEntity {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "roles_id")
     )
-
     private Set<Role> roles;
-
-    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Device> devices;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "profile_id")
@@ -52,19 +48,6 @@ public class User extends BaseEntity {
 
     public void removeRole(Role role) {
         this.roles.remove(role);
-    }
-
-    public void addDevice(Device device) {
-        if (this.devices == null) {
-            this.devices = new HashSet<>();
-        }
-        this.devices.add(device);
-        device.setOwner(this);
-    }
-
-    public void removeDevice(Device device) {
-        this.devices.remove(device);
-        device.setOwner(null);
     }
 
 }

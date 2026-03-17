@@ -24,9 +24,11 @@ public class UserProfile extends BaseEntity {
     private LocalDate birthDate;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean emailNotifications = true;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean smsNotifications = false;
 
 }
