@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,7 +20,13 @@ public class HomeController {
 
     @GetMapping
     public ResponseEntity<List<HomeResponseDto>> getHomes() {
-        return ResponseEntity.ok(homeService.findHomes());
+        return ResponseEntity.ok(homeService.findUserAllHomes());
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/all")
+    public ResponseEntity<List<HomeResponseDto>> getAllHomes() {
+        return ResponseEntity.ok(homeService.findAllHomes());
     }
 
     @GetMapping("/{id}")

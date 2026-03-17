@@ -1,5 +1,6 @@
 package example.web.securehome.exception.handler;
 
+import example.web.securehome.entity.Home;
 import example.web.securehome.exception.custom.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ErrorResponse.of(ex.getMessage(), HttpStatus.CONFLICT));
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(ex.getMessage(), HttpStatus.FORBIDDEN));
     }
 
     @ExceptionHandler(MemberHomeMismatchException.class)

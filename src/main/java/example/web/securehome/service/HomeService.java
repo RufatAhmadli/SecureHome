@@ -3,11 +3,18 @@ package example.web.securehome.service;
 import example.web.securehome.dto.request.HomeRequestDto;
 import example.web.securehome.dto.response.HomeResponseDto;
 import example.web.securehome.entity.Home;
-import example.web.securehome.exception.custom.HomeNotFoundException;
+import example.web.securehome.entity.HomeMember;
+import example.web.securehome.entity.User;
+import example.web.securehome.enums.HomeMemberRole;
+import example.web.securehome.exception.custom.HomeAccessDeniedException;
+import example.web.securehome.exception.custom.UnauthorizedException;
 import example.web.securehome.mapper.HomeMapper;
 import example.web.securehome.repository.HomeRepository;
+import example.web.securehome.repository.MemberRepository;
+import example.web.securehome.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -16,33 +23,74 @@ import java.util.List;
 public class HomeService {
     private final HomeRepository homeRepository;
     private final HomeMapper homeMapper;
+    private final SecurityUtils securityUtils;
+    private final MemberRepository memberRepository;
 
+    @Transactional(readOnly = true)
     public HomeResponseDto findHome(Long id) {
-        Home home = homeRepository.findById(id)
-                .orElseThrow(() -> new HomeNotFoundException(id));
+        User currentUser = securityUtils.getCurrentUser();
+        Home home = homeRepository.findByIdAndMembersUserId(id, currentUser.getId())
+                .orElseThrow(HomeAccessDeniedException::new);
         return homeMapper.toHomeResponseDto(home);
     }
 
-    public List<HomeResponseDto> findHomes() {
+    @Transactional(readOnly = true)
+    public List<HomeResponseDto> findUserAllHomes() {
+        User currentUser = securityUtils.getCurrentUser();
+        return homeRepository.findAllByMembersUserId(currentUser.getId())
+                .stream()
+                .map(homeMapper::toHomeResponseDto)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<HomeResponseDto> findAllHomes() {
         return homeRepository.findAll()
                 .stream()
                 .map(homeMapper::toHomeResponseDto)
                 .toList();
     }
 
+    @Transactional
     public HomeResponseDto createHome(HomeRequestDto homeRequestDto) {
+        User currentUser = securityUtils.getCurrentUser();
         Home saved = homeRepository.save(homeMapper.toHomeEntity(homeRequestDto));
+
+        HomeMember homeMember = HomeMember.builder()
+                .user(currentUser)
+                .role(HomeMemberRole.OWNER)
+                .home(saved)
+                .build();
+        memberRepository.save(homeMember); //duplication happens
         return homeMapper.toHomeResponseDto(saved);
     }
 
+    @Transactional
     public HomeResponseDto updateHome(Long id, HomeRequestDto homeRequestDto) {
-        Home found = homeRepository.findById(id)
-                .orElseThrow(() -> new HomeNotFoundException(id));
+        User currentUser = securityUtils.getCurrentUser();
+
+        HomeMember member = memberRepository.findByHomeIdAndUserId(id, currentUser.getId())
+                .orElseThrow(HomeAccessDeniedException::new);
+
+        if (member.getRole() != HomeMemberRole.OWNER) {
+            throw new UnauthorizedException("Only Owners can update home settings.");
+        }
+
+        Home found = member.getHome();
         homeMapper.updateHomeEntity(found, homeRequestDto);
         return homeMapper.toHomeResponseDto(homeRepository.save(found));
     }
 
+    @Transactional
     public void deleteHome(Long id) {
+        User currentUser = securityUtils.getCurrentUser();
+        HomeMember member = memberRepository.findByHomeIdAndUserId(id, currentUser.getId())
+                .orElseThrow(HomeAccessDeniedException::new);
+
+        if (member.getRole() != HomeMemberRole.OWNER) {
+            throw new UnauthorizedException("Only Owners can delete home.");
+        }
+
         homeRepository.deleteById(id);
     }
 }
