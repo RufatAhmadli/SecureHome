@@ -7,6 +7,7 @@ import example.web.securehome.entity.HomeMember;
 import example.web.securehome.entity.User;
 import example.web.securehome.enums.HomeMemberRole;
 import example.web.securehome.exception.custom.HomeAccessDeniedException;
+import example.web.securehome.exception.custom.HomeNameAlreadyExistsException;
 import example.web.securehome.exception.custom.UnauthorizedException;
 import example.web.securehome.mapper.HomeMapper;
 import example.web.securehome.repository.HomeRepository;
@@ -56,12 +57,16 @@ public class HomeService {
         User currentUser = securityUtils.getCurrentUser();
         Home saved = homeRepository.save(homeMapper.toHomeEntity(homeRequestDto));
 
+        if(homeRepository.existsByNameAndMembersUserId(homeRequestDto.getName(), currentUser.getId())){
+            throw new HomeNameAlreadyExistsException(homeRequestDto.getName());
+        };
+
         HomeMember homeMember = HomeMember.builder()
                 .user(currentUser)
                 .role(HomeMemberRole.OWNER)
                 .home(saved)
                 .build();
-        memberRepository.save(homeMember); //duplication happens
+        memberRepository.save(homeMember);
         return homeMapper.toHomeResponseDto(saved);
     }
 

@@ -13,6 +13,7 @@ import example.web.securehome.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -42,13 +43,13 @@ public class AuthService {
 
     @Transactional
     public LoginResponseDto login(LoginRequestDto dto) {
-        authenticationManager.authenticate(
+        Authentication authenticate = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         dto.getEmail(),
                         dto.getPassword()
                 )
         );
-        UserDetails userDetails = customUserDetailsService.loadUserByUsername(dto.getEmail());
+        UserDetails userDetails = (UserDetails) authenticate.getPrincipal();
         String token = jwtService.generateToken(userDetails);
         return LoginResponseDto.builder().token(token)
                 .email(userDetails.getUsername())

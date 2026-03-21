@@ -1,6 +1,6 @@
 package example.web.securehome.exception.custom;
 
-public class MemberAlreadyExistsException extends RuntimeException {
+public class MemberAlreadyExistsException extends ResourceAlreadyExistsException {
     public MemberAlreadyExistsException(String message) {
         super(message);
     }

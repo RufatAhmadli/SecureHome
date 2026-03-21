@@ -13,4 +13,7 @@ public interface HomeRepository extends JpaRepository<Home, Long> {
 
     @Query("select h from Home h inner join h.members members where h.id = ?1 and members.user.id = ?2")
     Optional<Home> findByIdAndMembersUserId(Long homeId, Long userId);
+
+    boolean existsByNameAndMembersUserId(String name, Long userId);
+
 }

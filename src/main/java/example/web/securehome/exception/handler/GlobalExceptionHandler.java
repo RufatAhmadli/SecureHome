@@ -26,8 +26,8 @@ public class GlobalExceptionHandler {
                         HttpStatus.UNAUTHORIZED));
     }
 
-    @ExceptionHandler(MemberAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleMemberAlreadyExistsException(MemberAlreadyExistsException ex) {
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleResourceAlreadyExistsException(ResourceAlreadyExistsException  ex) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ErrorResponse.of(ex.getMessage(), HttpStatus.CONFLICT));
