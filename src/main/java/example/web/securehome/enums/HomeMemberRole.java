@@ -2,6 +2,11 @@ package example.web.securehome.enums;
 
 public enum HomeMemberRole {
     OWNER,
+    ADMIN,
     MEMBER,
-    GUEST,
+    GUEST;
+
+    public boolean canManageRoom() {
+        return this == OWNER || this == ADMIN;
+    }
 }
