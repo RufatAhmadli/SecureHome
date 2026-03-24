@@ -7,13 +7,10 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class HomeResponseDto {
+public class RoomResponseDto {
     private Long id;
-    private String name;
-    private String address;
-    private String city;
+    private String roomName;
+    private Integer floor;
     private String description;
-    private String timezone;
-
-
+    private HomeResponseDto home;
 }

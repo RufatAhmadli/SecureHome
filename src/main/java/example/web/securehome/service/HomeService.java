@@ -55,11 +55,12 @@ public class HomeService {
     @Transactional
     public HomeResponseDto createHome(HomeRequestDto homeRequestDto) {
         User currentUser = securityUtils.getCurrentUser();
-        Home saved = homeRepository.save(homeMapper.toHomeEntity(homeRequestDto));
 
         if(homeRepository.existsByNameAndMembersUserId(homeRequestDto.getName(), currentUser.getId())){
             throw new HomeNameAlreadyExistsException(homeRequestDto.getName());
         };
+
+        Home saved = homeRepository.save(homeMapper.toHomeEntity(homeRequestDto));
 
         HomeMember homeMember = HomeMember.builder()
                 .user(currentUser)

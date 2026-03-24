@@ -21,6 +21,7 @@ public class Room extends BaseEntity {
     @Column(nullable = false)
     private String roomName;
 
+    private Integer floor;
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

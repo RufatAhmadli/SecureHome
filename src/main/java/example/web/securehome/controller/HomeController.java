@@ -2,7 +2,9 @@ package example.web.securehome.controller;
 
 import example.web.securehome.dto.request.HomeRequestDto;
 import example.web.securehome.dto.response.HomeResponseDto;
+import example.web.securehome.dto.response.RoomResponseDto;
 import example.web.securehome.service.HomeService;
+import example.web.securehome.service.RoomService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class HomeController {
     private final HomeService homeService;
+    private final RoomService roomService;
 
     @GetMapping
     public ResponseEntity<List<HomeResponseDto>> getHomes() {
@@ -27,6 +30,11 @@ public class HomeController {
     @GetMapping("/all")
     public ResponseEntity<List<HomeResponseDto>> getAllHomes() {
         return ResponseEntity.ok(homeService.findAllHomes());
+    }
+
+    @GetMapping("/{homeId}/rooms")
+    public ResponseEntity<List<RoomResponseDto>> getRoomsByHomeId(@PathVariable Long homeId) {
+        return ResponseEntity.ok(roomService.findAllRoomsByHomeId(homeId));
     }
 
     @GetMapping("/{id}")
