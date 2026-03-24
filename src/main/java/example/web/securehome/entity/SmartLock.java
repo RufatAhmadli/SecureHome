@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "locks")
-public class SmartLock extends Device{
+public class SmartLock extends Device {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private LockStatus lockStatus;
@@ -30,6 +30,4 @@ public class SmartLock extends Device{
 
     @Column(nullable = false)
     private boolean tamperAlert;
-
-    private LocalDateTime lastUnlockedAt;
 }

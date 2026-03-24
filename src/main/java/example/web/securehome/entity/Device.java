@@ -35,12 +35,11 @@ public abstract class Device extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private DeviceStatus status;
 
-    @Column(nullable = false)
-    private LocalDateTime registeredAt;
-
-    private LocalDateTime lastSeenAt;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id")
+    private Room room;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "room_id", nullable = false)
-    private Room room;
+    @JoinColumn(name = "home_id", nullable = false)
+    private Home home;
 }
