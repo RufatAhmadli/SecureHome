@@ -6,8 +6,12 @@ spring:
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
 
 jwt:
   secret: ${SECRET_KEY}
   expiration: ${EXPIRATION_TIME}
+logging:
+  level:
+    liquibase: DEBUG
+    root: INFO
