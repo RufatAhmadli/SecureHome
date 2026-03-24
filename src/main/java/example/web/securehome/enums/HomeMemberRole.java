@@ -9,4 +9,8 @@ public enum HomeMemberRole {
     public boolean canManageRoom() {
         return this == OWNER || this == ADMIN;
     }
+
+    public boolean canManageDevice() {
+        return this == OWNER || this == ADMIN;
+    }
 }

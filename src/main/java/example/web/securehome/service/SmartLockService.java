@@ -6,7 +6,6 @@ import example.web.securehome.entity.SmartLock;
 import example.web.securehome.entity.User;
 import example.web.securehome.enums.LockStatus;
 import example.web.securehome.exception.custom.DeviceNotFoundException;
-import example.web.securehome.exception.custom.HomeAccessDeniedException;
 import example.web.securehome.mapper.SmartLockMapper;
 import example.web.securehome.repository.HomeRepository;
 import example.web.securehome.repository.MemberRepository;
@@ -23,7 +22,6 @@ import java.util.Optional;
 public class SmartLockService extends DeviceService<SmartLock, SmartLockRequestDto, SmartLockResponseDto> {
     private final SmartLockRepository smartLockRepository;
     private final SmartLockMapper smartLockMapper;
-    private final MemberRepository memberRepository;
     private final SecurityUtils securityUtils;
 
     public SmartLockService(RoomRepository roomRepository,
@@ -41,7 +39,6 @@ public class SmartLockService extends DeviceService<SmartLock, SmartLockRequestD
         );
         this.smartLockRepository = smartLockRepository;
         this.smartLockMapper = smartLockMapper;
-        this.memberRepository = memberRepository;
         this.securityUtils = securityUtils;
     }
 
@@ -74,7 +71,7 @@ public class SmartLockService extends DeviceService<SmartLock, SmartLockRequestD
     public SmartLockResponseDto updateLockStatus(Long id, LockStatus lockStatus) {
         User currentUser = securityUtils.getCurrentUser();
         SmartLock smartLock = smartLockRepository.findById(id).orElseThrow(() -> new DeviceNotFoundException(id));
-        verifyHomeAccess(currentUser.getId(), smartLock.getHome().getId());
+        verifyCanManageDevices(currentUser, smartLock.getHome().getId());
         smartLock.setLockStatus(lockStatus);
         return smartLockMapper.toResponseDto(smartLockRepository.save(smartLock));
     }
@@ -87,11 +84,5 @@ public class SmartLockService extends DeviceService<SmartLock, SmartLockRequestD
     @Transactional
     public SmartLockResponseDto unlock(Long id) {
         return updateLockStatus(id, LockStatus.UNLOCKED);
-    }
-
-    private void verifyHomeAccess(Long userId, Long homeId) {
-        if (!memberRepository.existsHomeMemberByUserIdAndHomeId(userId, homeId)) {
-            throw new HomeAccessDeniedException();
-        }
     }
 }

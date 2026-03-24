@@ -4,6 +4,7 @@ import example.web.securehome.dto.request.DeviceRequestDto;
 import example.web.securehome.dto.response.DeviceResponseDto;
 import example.web.securehome.entity.Device;
 import example.web.securehome.entity.Home;
+import example.web.securehome.entity.HomeMember;
 import example.web.securehome.entity.Room;
 import example.web.securehome.entity.User;
 import example.web.securehome.enums.DeviceStatus;
@@ -76,7 +77,7 @@ public abstract class DeviceService<T extends Device, REQ extends DeviceRequestD
         User currentUser = securityUtils.getCurrentUser();
         Home home = homeRepository.findById(requestDto.getHomeId())
                 .orElseThrow(() -> new HomeNotFoundException(requestDto.getHomeId()));
-        verifyHomeAccess(currentUser, home.getId());
+        verifyCanManageDevices(currentUser, home.getId());
 
         Room room = resolveRoom(requestDto.getRoomId(), home.getId());
         T device = deviceMapper.toEntity(requestDto);
@@ -90,7 +91,7 @@ public abstract class DeviceService<T extends Device, REQ extends DeviceRequestD
     public RES update(Long id, REQ requestDto) {
         User currentUser = securityUtils.getCurrentUser();
         T existingDevice = findTypedDeviceById(id);
-        verifyHomeAccess(currentUser, existingDevice.getHome().getId());
+        verifyCanManageDevices(currentUser, existingDevice.getHome().getId());
 
         if (!existingDevice.getHome().getId().equals(requestDto.getHomeId())) {
             throw new HomeAccessDeniedException("Changing device home is not allowed.");
@@ -106,7 +107,7 @@ public abstract class DeviceService<T extends Device, REQ extends DeviceRequestD
     public void delete(Long id) {
         User currentUser = securityUtils.getCurrentUser();
         T existingDevice = findTypedDeviceById(id);
-        verifyHomeAccess(currentUser, existingDevice.getHome().getId());
+        verifyCanManageDevices(currentUser, existingDevice.getHome().getId());
         deleteTyped(existingDevice);
     }
 
@@ -130,6 +131,15 @@ public abstract class DeviceService<T extends Device, REQ extends DeviceRequestD
     private void verifyHomeAccess(User currentUser, Long homeId) {
         if (!memberRepository.existsHomeMemberByUserIdAndHomeId(currentUser.getId(), homeId)) {
             throw new HomeAccessDeniedException();
+        }
+    }
+
+
+    protected void verifyCanManageDevices(User currentUser, Long homeId) {
+        HomeMember member = memberRepository.findByHomeIdAndUserId(homeId, currentUser.getId())
+                .orElseThrow(HomeAccessDeniedException::new);
+        if (!member.getRole().canManageDevice()) {
+            throw new HomeAccessDeniedException("Only Owners or Admins can manage devices.");
         }
     }
 
