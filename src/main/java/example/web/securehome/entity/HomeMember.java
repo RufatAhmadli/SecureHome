@@ -3,11 +3,13 @@ package example.web.securehome.entity;
 import example.web.securehome.enums.HomeMemberRole;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
+
 
 @Entity
 @Getter
 @Setter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(
