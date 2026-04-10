@@ -1,31 +1,33 @@
-import { Form, Input, Button, Card, Typography, message, Divider } from 'antd'
+import { Form, Input, Button, Card, Typography, Alert, Divider } from 'antd'
 import { LockOutlined, MailOutlined, HomeOutlined } from '@ant-design/icons'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate, Link } from 'react-router-dom'
+import { useState } from 'react'
 import { login } from '../api/auth'
 import useAuthStore from '../store/authStore'
 
 const { Title, Text } = Typography
 
 export default function Login() {
-  const navigate = useNavigate()
-  const setToken = useAuthStore((s) => s.setToken)
-  const [messageApi, contextHolder] = message.useMessage()
+  const navigate  = useNavigate()
+  const setToken  = useAuthStore((s) => s.setToken)
+  const [form]    = Form.useForm()
+  const [error, setError] = useState(null)
 
   const mutation = useMutation({
     mutationFn: login,
     onSuccess: (data) => {
+      setError(null)
       setToken(data.token)
       navigate('/')
     },
-    onError: (err) => {
-      messageApi.error(err.response?.data?.message || 'Invalid email or password.')
+    onError: () => {
+      setError('Email or password is incorrect')
     },
   })
 
   return (
     <div style={styles.page}>
-      {contextHolder}
       <div style={styles.brand}>
         <HomeOutlined style={{ fontSize: 28, color: '#1677ff' }} />
         <Title level={3} style={{ margin: 0, color: '#1677ff' }}>SecureHome</Title>
@@ -37,7 +39,18 @@ export default function Login() {
           Sign in to manage your smart home
         </Text>
 
-        <Form layout="vertical" onFinish={(v) => mutation.mutate(v)} size="large">
+        {error && (
+          <Alert
+            type="error"
+            message={error}
+            showIcon
+            closable
+            onClose={() => setError(null)}
+            style={{ marginBottom: 20 }}
+          />
+        )}
+
+        <Form form={form} layout="vertical" onFinish={(v) => { setError(null); mutation.mutate(v) }} size="large">
           <Form.Item
             name="email"
             label="Email"

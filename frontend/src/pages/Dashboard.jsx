@@ -5,12 +5,13 @@ import {
 import {
   PlusOutlined, HomeOutlined, EditOutlined, DeleteOutlined,
   EnvironmentOutlined, LogoutOutlined, UserOutlined, EllipsisOutlined,
-  ArrowRightOutlined,
+  ArrowRightOutlined, SettingOutlined, CrownOutlined,
 } from '@ant-design/icons'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getHomes, createHome, updateHome, deleteHome } from '../api/homes'
+import { getMe } from '../api/auth'
 import useAuthStore from '../store/authStore'
 
 const { Title, Text } = Typography
@@ -24,7 +25,10 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { user, logout } = useAuthStore()
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN')
   const [messageApi, contextHolder] = message.useMessage()
+
+  const { data: account } = useQuery({ queryKey: ['auth', 'me'], queryFn: getMe })
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editingHome, setEditingHome] = useState(null)
@@ -91,7 +95,33 @@ export default function Dashboard() {
   }
 
   const userMenuItems = [
-    { key: 'email', label: <Text type="secondary">{user?.email}</Text>, disabled: true },
+    {
+      key: 'info',
+      label: (
+        <div>
+          <Text strong>{account?.firstName} {account?.lastName}</Text>
+          <br />
+          <Text type="secondary" style={{ fontSize: 12 }}>{user?.email}</Text>
+        </div>
+      ),
+      disabled: true,
+    },
+    { type: 'divider' },
+    {
+      key: 'profile',
+      label: 'My Profile',
+      icon: <SettingOutlined />,
+      onClick: () => navigate('/profile'),
+    },
+    // Admin-only menu item
+    ...(isAdmin ? [
+      {
+        key: 'admin-profiles',
+        label: 'All User Profiles',
+        icon: <CrownOutlined style={{ color: '#d48806' }} />,
+        onClick: () => navigate('/admin/profiles'),
+      },
+    ] : []),
     { type: 'divider' },
     {
       key: 'logout',
@@ -113,10 +143,9 @@ export default function Dashboard() {
           <Title level={4} style={{ margin: 0, color: '#1677ff' }}>SecureHome</Title>
         </div>
         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
-          <Avatar
-            style={{ background: '#1677ff', cursor: 'pointer' }}
-            icon={<UserOutlined />}
-          />
+          <Avatar style={{ background: '#1677ff', cursor: 'pointer' }}>
+            {account?.firstName?.[0]?.toUpperCase() || <UserOutlined />}
+          </Avatar>
         </Dropdown>
       </header>
 

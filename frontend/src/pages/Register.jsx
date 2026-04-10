@@ -1,29 +1,37 @@
-import { Form, Input, Button, Card, Typography, message, Divider } from 'antd'
+import { Form, Input, Button, Card, Typography, Alert, Divider } from 'antd'
 import { UserOutlined, LockOutlined, MailOutlined, HomeOutlined } from '@ant-design/icons'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate, Link } from 'react-router-dom'
+import { useState } from 'react'
 import { register } from '../api/auth'
 
 const { Title, Text } = Typography
 
 export default function Register() {
   const navigate = useNavigate()
-  const [messageApi, contextHolder] = message.useMessage()
+  const [form]   = Form.useForm()
+  const [error, setError]     = useState(null)
+  const [success, setSuccess] = useState(false)
 
   const mutation = useMutation({
     mutationFn: register,
     onSuccess: () => {
-      messageApi.success('Account created! Please sign in.')
-      setTimeout(() => navigate('/login'), 1200)
+      setSuccess(true)
+      setError(null)
+      setTimeout(() => navigate('/login'), 1500)
     },
     onError: (err) => {
-      messageApi.error(err.response?.data?.message || 'Registration failed. Try again.')
+      setError(err?.response?.data?.message || 'Registration failed. Try again.')
     },
   })
 
+  const handleSubmit = ({ confirmPassword, ...payload }) => {
+    setError(null)
+    mutation.mutate(payload)
+  }
+
   return (
     <div style={styles.page}>
-      {contextHolder}
       <div style={styles.brand}>
         <HomeOutlined style={{ fontSize: 28, color: '#1677ff' }} />
         <Title level={3} style={{ margin: 0, color: '#1677ff' }}>SecureHome</Title>
@@ -35,7 +43,21 @@ export default function Register() {
           Join SecureHome — your private smart home hub
         </Text>
 
-        <Form layout="vertical" onFinish={(v) => mutation.mutate(v)} size="large">
+        {success && (
+          <Alert type="success" message="Account created! Redirecting to sign in…" showIcon style={{ marginBottom: 20 }} />
+        )}
+        {error && (
+          <Alert
+            type="error"
+            message={error}
+            showIcon
+            closable
+            onClose={() => setError(null)}
+            style={{ marginBottom: 20 }}
+          />
+        )}
+
+        <Form form={form} layout="vertical" onFinish={handleSubmit} size="large">
           <div style={{ display: 'flex', gap: 12 }}>
             <Form.Item
               name="firstName"
@@ -71,10 +93,13 @@ export default function Register() {
             label="Password"
             rules={[
               { required: true, message: 'Password is required' },
-              { min: 8, message: 'At least 8 characters' },
+              {
+                pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/,
+                message: 'Min 8 characters with uppercase, lowercase, digit and special character (@$!%*?&)',
+              },
             ]}
           >
-            <Input.Password prefix={<LockOutlined />} placeholder="Min. 8 characters" />
+            <Input.Password prefix={<LockOutlined />} placeholder="Min. 8 chars, e.g. Secret@1" />
           </Form.Item>
 
           <Form.Item
