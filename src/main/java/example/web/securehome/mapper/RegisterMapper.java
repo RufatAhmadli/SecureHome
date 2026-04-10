@@ -2,6 +2,7 @@ package example.web.securehome.mapper;
 
 import example.web.securehome.dto.request.RegisterRequestDto;
 import example.web.securehome.dto.response.RegisterResponseDto;
+import example.web.securehome.dto.response.UserAccountResponseDto;
 import example.web.securehome.entity.Role;
 import example.web.securehome.entity.User;
 import org.mapstruct.Mapper;
@@ -18,6 +19,9 @@ public interface RegisterMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "password",ignore = true)
     User toUserEntity(RegisterRequestDto registerRequestDto);
+
+    @Mapping(target = "roles", expression = "java(mapRoles(user))")
+    UserAccountResponseDto toUserAccountResponseDto(User user);
 
     @Mapping(target = "roles", expression = "java(mapRoles(user))")
     @Mapping(target = "message", constant = "Registered successfully")
