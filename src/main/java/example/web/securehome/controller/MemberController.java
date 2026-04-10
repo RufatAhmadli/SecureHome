@@ -32,9 +32,9 @@ public class MemberController {
         return ResponseEntity.ok(memberService.findAllMembersByHomeId(homeId));
     }
 
-    @PostMapping("/{homeId}/members/{userId}")
-    public ResponseEntity<MemberResponseDto> createMember(@PathVariable Long homeId, @PathVariable Long userId, @Valid @RequestBody MemberRequestDto memberRequestDto) {
-        return new ResponseEntity<>(memberService.addMember(homeId, userId, memberRequestDto), HttpStatus.CREATED);
+    @PostMapping("/{homeId}/members/addMember")
+    public ResponseEntity<MemberResponseDto> createMember(@PathVariable Long homeId, @Valid @RequestBody MemberRequestDto memberRequestDto) {
+        return new ResponseEntity<>(memberService.addMember(homeId, memberRequestDto), HttpStatus.CREATED);
     }
 
     @PutMapping("/{homeId}/members/{memberId}")

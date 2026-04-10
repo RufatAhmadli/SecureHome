@@ -16,33 +16,34 @@ import java.util.List;
 @RequestMapping("/api/v1/profiles")
 @RequiredArgsConstructor
 public class ProfileController {
+
     private final UserProfileService userProfileService;
 
+    @GetMapping("/me")
+    public ResponseEntity<UserProfileResponseDto> getMyProfile() {
+        UserProfileResponseDto profile = userProfileService.getMyProfile();
+        return profile != null ? ResponseEntity.ok(profile) : ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/me")
+    public ResponseEntity<UserProfileResponseDto> createMyProfile(@Valid @RequestBody UserProfileRequestDto dto) {
+        return new ResponseEntity<>(userProfileService.createMyProfile(dto), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UserProfileResponseDto> updateMyProfile(@Valid @RequestBody UserProfileRequestDto dto) {
+        return ResponseEntity.ok(userProfileService.updateMyProfile(dto));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
-    public ResponseEntity<UserProfileResponseDto> getProfile(@PathVariable Long id) {
+    public ResponseEntity<UserProfileResponseDto> getProfileById(@PathVariable Long id) {
         return ResponseEntity.ok(userProfileService.findUserProfileById(id));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<List<UserProfileResponseDto>> getProfiles() {
+    public ResponseEntity<List<UserProfileResponseDto>> getAllProfiles() {
         return ResponseEntity.ok(userProfileService.findAllUserProfiles());
-    }
-
-    @PostMapping
-    public ResponseEntity<UserProfileResponseDto> createProfile(@Valid @RequestBody UserProfileRequestDto userProfileRequestDto) {
-        UserProfileResponseDto response = userProfileService.createUserProfile(userProfileRequestDto);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<UserProfileResponseDto> updateProfile(@PathVariable Long id, @Valid @RequestBody UserProfileRequestDto userProfileRequestDto) {
-        return ResponseEntity.ok(userProfileService.updateUserProfile(id, userProfileRequestDto));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProfile(@PathVariable Long id) {
-        userProfileService.deleteUserProfileById(id);
-        return ResponseEntity.noContent().build();
     }
 }

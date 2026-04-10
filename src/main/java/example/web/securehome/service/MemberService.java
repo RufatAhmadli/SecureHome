@@ -89,15 +89,16 @@ public class MemberService {
     }
 
     @Transactional
-    public MemberResponseDto addMember(Long homeId, Long userId, MemberRequestDto memberRequestDto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+    public MemberResponseDto addMember(Long homeId, MemberRequestDto memberRequestDto) {
+        String email = memberRequestDto.getEmail();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
 
         Home home = homeRepository.findById(homeId)
                 .orElseThrow(() -> new HomeNotFoundException(homeId));
 
-        if (memberRepository.existsHomeMemberByUserIdAndHomeId(userId, homeId)) {
-            throw new MemberAlreadyExistsException(userId, homeId);
+        if (memberRepository.existsHomeMemberByUserIdAndHomeId(user.getId(), homeId)) {
+            throw new MemberAlreadyExistsException(user.getId(), homeId);
         }
 
         HomeMember member = HomeMember.builder()
