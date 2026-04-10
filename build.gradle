@@ -51,3 +51,26 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+// ── Frontend build ────────────────────────────────────────────────
+def frontendDir = "$projectDir/frontend"
+def isWindows = System.properties['os.name'].toLowerCase().contains('windows')
+def npmCmd = isWindows ? ['cmd', '/c', 'npm'] : ['npm']
+
+task npmInstall(type: Exec) {
+    workingDir frontendDir
+    inputs.file "$frontendDir/package.json"
+    outputs.dir "$frontendDir/node_modules"
+    commandLine(*npmCmd, 'install')
+}
+
+task buildFrontend(type: Exec) {
+    dependsOn npmInstall
+    workingDir frontendDir
+    inputs.dir "$frontendDir/src"
+    inputs.file "$frontendDir/vite.config.js"
+    outputs.dir "$projectDir/src/main/resources/static"
+    commandLine(*npmCmd, 'run', 'build')
+}
+
+processResources.dependsOn buildFrontend
