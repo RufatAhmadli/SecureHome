@@ -17,6 +17,11 @@ import java.util.List;
 public class MemberController {
     private final MemberService memberService;
 
+    @GetMapping("/memberships")
+    public ResponseEntity<List<MemberResponseDto>> getMyMemberships() {
+        return ResponseEntity.ok(memberService.findMyMemberships());
+    }
+
     @GetMapping("/{homeId}/members/{memberId}")
     public ResponseEntity<MemberResponseDto> getMemberById(@PathVariable Long homeId, @PathVariable Long memberId) {
         return ResponseEntity.ok(memberService.findMemberById(homeId, memberId));
@@ -30,6 +35,11 @@ public class MemberController {
     @PostMapping("/{homeId}/members/{userId}")
     public ResponseEntity<MemberResponseDto> createMember(@PathVariable Long homeId, @PathVariable Long userId, @Valid @RequestBody MemberRequestDto memberRequestDto) {
         return new ResponseEntity<>(memberService.addMember(homeId, userId, memberRequestDto), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{homeId}/members/{memberId}")
+    public ResponseEntity<MemberResponseDto> updateMemberRole(@PathVariable Long homeId, @PathVariable Long memberId, @Valid @RequestBody MemberRequestDto memberRequestDto) {
+        return ResponseEntity.ok(memberService.updateMemberRole(homeId, memberId, memberRequestDto));
     }
 
     @DeleteMapping("/{homeId}/members/{memberId}")

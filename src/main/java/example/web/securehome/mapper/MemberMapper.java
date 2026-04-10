@@ -14,6 +14,12 @@ public interface MemberMapper {
     @Mapping(target = "home", ignore = true)
     HomeMember toMemberEntity(MemberRequestDto memberRequestDto);
 
+    @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "userFirstName", source = "user.firstName")
+    @Mapping(target = "userLastName", source = "user.lastName")
+    @Mapping(target = "userEmail", source = "user.email")
+    @Mapping(target = "homeId", source = "home.id")
+    @Mapping(target = "homeName", source = "home.name")
     MemberResponseDto toMemberResponseDto(HomeMember homeMember);
 
     @Mapping(target = "user", ignore = true)

@@ -1,19 +1,7 @@
 package example.web.securehome.controller;
 
 import example.web.securehome.dto.response.DeviceResponseDto;
-import example.web.securehome.entity.Device;
-import example.web.securehome.entity.User;
-import example.web.securehome.exception.custom.DeviceNotFoundException;
-import example.web.securehome.exception.custom.HomeAccessDeniedException;
-import example.web.securehome.exception.custom.HomeNotFoundException;
-import example.web.securehome.exception.custom.RoomNotFoundException;
-import example.web.securehome.mapper.HomeMapper;
-import example.web.securehome.mapper.RoomMapper;
-import example.web.securehome.repository.DeviceRepository;
-import example.web.securehome.repository.HomeRepository;
-import example.web.securehome.repository.MemberRepository;
-import example.web.securehome.repository.RoomRepository;
-import example.web.securehome.util.SecurityUtils;
+import example.web.securehome.service.DeviceQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,20 +19,12 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 @RequestMapping("/api/v1/devices")
 @RequiredArgsConstructor
 public class DeviceController {
-    private final DeviceRepository deviceRepository;
-    private final HomeRepository homeRepository;
-    private final RoomRepository roomRepository;
-    private final MemberRepository memberRepository;
-    private final SecurityUtils securityUtils;
-    private final HomeMapper homeMapper;
-    private final RoomMapper roomMapper;
+
+    private final DeviceQueryService deviceQueryService;
 
     @GetMapping("/{id}")
     public ResponseEntity<DeviceResponseDto> getDeviceById(@PathVariable Long id) {
-        User currentUser = securityUtils.getCurrentUser();
-        Device device = deviceRepository.findById(id).orElseThrow(() -> new DeviceNotFoundException(id));
-        verifyHomeAccess(currentUser.getId(), device.getHome().getId());
-        return ResponseEntity.ok(toResponseDto(device));
+        return ResponseEntity.ok(deviceQueryService.findById(id));
     }
 
     @GetMapping
@@ -58,35 +38,9 @@ public class DeviceController {
         if (homeId == null && roomId == null) {
             throw new ResponseStatusException(BAD_REQUEST, "Provide one filter: homeId or roomId.");
         }
-
         if (homeId != null) {
-            User currentUser = securityUtils.getCurrentUser();
-            if (!homeRepository.existsById(homeId)) {
-                throw new HomeNotFoundException(homeId);
-            }
-            verifyHomeAccess(currentUser.getId(), homeId);
-            return ResponseEntity.ok(deviceRepository.findAllByHomeId(homeId).stream().map(this::toResponseDto).toList());
+            return ResponseEntity.ok(deviceQueryService.findAllByHomeId(homeId));
         }
-        User currentUser = securityUtils.getCurrentUser();
-        var room = roomRepository.findById(roomId).orElseThrow(() -> new RoomNotFoundException(roomId));
-        verifyHomeAccess(currentUser.getId(), room.getHome().getId());
-        return ResponseEntity.ok(deviceRepository.findAllByRoomId(roomId).stream().map(this::toResponseDto).toList());
-    }
-
-    private void verifyHomeAccess(Long userId, Long homeId) {
-        if (!memberRepository.existsHomeMemberByUserIdAndHomeId(userId, homeId)) {
-            throw new HomeAccessDeniedException();
-        }
-    }
-
-    private DeviceResponseDto toResponseDto(Device device) {
-        return DeviceResponseDto.builder()
-                .id(device.getId())
-                .deviceName(device.getDeviceName())
-                .displayName(device.getDisplayName())
-                .protocol(device.getProtocol())
-                .home(homeMapper.toHomeResponseDto(device.getHome()))
-                .room(device.getRoom() == null ? null : roomMapper.toRoomResponseDto(device.getRoom()))
-                .build();
+        return ResponseEntity.ok(deviceQueryService.findAllByRoomId(roomId));
     }
 }

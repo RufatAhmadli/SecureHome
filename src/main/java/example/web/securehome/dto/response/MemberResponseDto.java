@@ -2,8 +2,6 @@ package example.web.securehome.dto.response;
 
 import lombok.*;
 
-import java.util.Set;
-
 @Getter
 @Setter
 @Builder
@@ -12,5 +10,10 @@ import java.util.Set;
 public class MemberResponseDto {
     private Long id;
     private String role;
-    //!!! continue this part
+    private Long userId;
+    private String userFirstName;
+    private String userLastName;
+    private String userEmail;
+    private Long homeId;
+    private String homeName;
 }
