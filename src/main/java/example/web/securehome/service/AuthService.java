@@ -15,7 +15,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,8 +26,8 @@ public class AuthService {
     private final RegisterMapper registerMapper;
     private final RoleRepository roleRepository;
     private final JwtService jwtService;
-    private final CustomUserDetailsService customUserDetailsService;
     private final AuthenticationManager authenticationManager;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Transactional
     public RegisterResponseDto register(RegisterRequestDto dto) {
@@ -36,7 +35,7 @@ public class AuthService {
         Role userRole = roleRepository.findByRoleNameContainsIgnoreCase("user")
                 .orElseThrow(() -> new RoleNotFoundException("user"));
         request.addRole(userRole);
-        request.setPassword(new BCryptPasswordEncoder().encode(dto.getPassword()));
+        request.setPassword(passwordEncoder.encode(dto.getPassword()));
         User saved = userRepository.save(request);
         return registerMapper.toRegisterResponseDto(saved);
     }

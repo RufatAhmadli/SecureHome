@@ -23,11 +23,11 @@ import java.util.List;
 
 public abstract class DeviceService<T extends Device, REQ extends DeviceRequestDto, RES extends DeviceResponseDto> {
 
-    private final RoomRepository roomRepository;
-    private final HomeRepository homeRepository;
-    private final DeviceMapper<T, REQ, RES> deviceMapper;
-    private final MemberRepository memberRepository;
-    private final SecurityUtils securityUtils;
+    protected final RoomRepository roomRepository;
+    protected final HomeRepository homeRepository;
+    protected final DeviceMapper<T, REQ, RES> deviceMapper;
+    protected final MemberRepository memberRepository;
+    protected final SecurityUtils securityUtils;
 
     public DeviceService(RoomRepository roomRepository,
                          DeviceMapper<T, REQ, RES> deviceMapper,

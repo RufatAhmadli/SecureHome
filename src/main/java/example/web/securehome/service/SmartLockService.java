@@ -3,7 +3,6 @@ package example.web.securehome.service;
 import example.web.securehome.dto.request.SmartLockRequestDto;
 import example.web.securehome.dto.response.SmartLockResponseDto;
 import example.web.securehome.entity.SmartLock;
-import example.web.securehome.entity.User;
 import example.web.securehome.enums.LockStatus;
 import example.web.securehome.exception.custom.DeviceNotFoundException;
 import example.web.securehome.mapper.SmartLockMapper;
@@ -20,9 +19,8 @@ import java.util.Optional;
 
 @Service
 public class SmartLockService extends DeviceService<SmartLock, SmartLockRequestDto, SmartLockResponseDto> {
+
     private final SmartLockRepository smartLockRepository;
-    private final SmartLockMapper smartLockMapper;
-    private final SecurityUtils securityUtils;
 
     public SmartLockService(RoomRepository roomRepository,
                             SmartLockMapper smartLockMapper,
@@ -30,16 +28,8 @@ public class SmartLockService extends DeviceService<SmartLock, SmartLockRequestD
                             MemberRepository memberRepository,
                             SecurityUtils securityUtils,
                             SmartLockRepository smartLockRepository) {
-        super(
-                roomRepository,
-                smartLockMapper,
-                homeRepository,
-                memberRepository,
-                securityUtils
-        );
+        super(roomRepository, smartLockMapper, homeRepository, memberRepository, securityUtils);
         this.smartLockRepository = smartLockRepository;
-        this.smartLockMapper = smartLockMapper;
-        this.securityUtils = securityUtils;
     }
 
     @Override
@@ -69,11 +59,11 @@ public class SmartLockService extends DeviceService<SmartLock, SmartLockRequestD
 
     @Transactional
     public SmartLockResponseDto updateLockStatus(Long id, LockStatus lockStatus) {
-        User currentUser = securityUtils.getCurrentUser();
-        SmartLock smartLock = smartLockRepository.findById(id).orElseThrow(() -> new DeviceNotFoundException(id));
-        verifyCanManageDevices(currentUser, smartLock.getHome().getId());
+        SmartLock smartLock = smartLockRepository.findById(id)
+                .orElseThrow(() -> new DeviceNotFoundException(id));
+        verifyCanManageDevices(securityUtils.getCurrentUser(), smartLock.getHome().getId());
         smartLock.setLockStatus(lockStatus);
-        return smartLockMapper.toResponseDto(smartLockRepository.save(smartLock));
+        return deviceMapper.toResponseDto(smartLockRepository.save(smartLock));
     }
 
     @Transactional
