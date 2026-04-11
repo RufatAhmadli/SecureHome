@@ -59,6 +59,20 @@ public class CameraService extends DeviceService<Camera, CameraRequestDto, Camer
         cameraRepository.delete(entity);
     }
 
+    /**
+     * Called by the MQTT router when a camera reports its own armed state.
+     * No user authentication or RBAC — the device itself is the source of truth.
+     */
+    @Transactional
+    public void reportArmedStatus(Long id, boolean armed) {
+        Camera camera = cameraRepository.findById(id)
+                .orElseThrow(() -> new DeviceNotFoundException(id));
+        camera.setArmed(armed);
+        cameraRepository.save(camera);
+        CameraEvent.Action action = armed ? CameraEvent.Action.ARMED : CameraEvent.Action.DISARMED;
+        eventPublisher.publishEvent(new CameraEvent("device", id, camera.getDisplayName(), camera.getHome().getId(), action));
+    }
+
     @Transactional
     public CameraResponseDto arm(Long id) {
         Camera camera = cameraRepository.findById(id).orElseThrow(() -> new DeviceNotFoundException(id));

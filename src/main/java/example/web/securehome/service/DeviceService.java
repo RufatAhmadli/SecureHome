@@ -46,7 +46,7 @@ public abstract class DeviceService<T extends Device, REQ extends DeviceRequestD
         this.eventPublisher = eventPublisher;
     }
 
-    @Transactional(readOnly = true)
+@Transactional(readOnly = true)
     public List<RES> findAllByRoomId(Long roomId) {
         User currentUser = securityUtils.getCurrentUser();
         Room room = roomRepository.findById(roomId)

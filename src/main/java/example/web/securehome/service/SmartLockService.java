@@ -69,6 +69,21 @@ public class SmartLockService extends DeviceService<SmartLock, SmartLockRequestD
         return deviceMapper.toResponseDto(smartLockRepository.save(smartLock));
     }
 
+    /**
+     * Called by the MQTT router when a device reports its own lock state.
+     * No user authentication or RBAC — the device itself is the source of truth.
+     */
+    @Transactional
+    public void reportLockStatus(Long id, LockStatus lockStatus) {
+        SmartLock lock = smartLockRepository.findById(id)
+                .orElseThrow(() -> new DeviceNotFoundException(id));
+        lock.setLockStatus(lockStatus);
+        smartLockRepository.save(lock);
+        SmartLockEvent.Action action = lockStatus == LockStatus.LOCKED
+                ? SmartLockEvent.Action.LOCKED : SmartLockEvent.Action.UNLOCKED;
+        eventPublisher.publishEvent(new SmartLockEvent("device", id, lock.getDisplayName(), lock.getHome().getId(), action));
+    }
+
     @Transactional
     public SmartLockResponseDto lock(Long id) {
         SmartLockResponseDto result = updateLockStatus(id, LockStatus.LOCKED);

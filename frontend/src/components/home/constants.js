@@ -4,7 +4,8 @@ export const canOperate = (role) => role === 'OWNER' || role === 'ADMIN' || role
 export const PROTOCOLS    = ['WIFI', 'ZIGBEE', 'MQTT', 'BLUETOOTH', 'WEBSOCKET']
 export const MEMBER_ROLES = ['OWNER', 'ADMIN', 'MEMBER', 'GUEST']
 export const ROLE_COLORS  = { OWNER: 'gold', ADMIN: 'blue', MEMBER: 'green', GUEST: 'default' }
-export const LOCK_COLORS  = { LOCKED: 'error', UNLOCKED: 'success', JAMMED: 'warning' }
+export const LOCK_COLORS   = { LOCKED: 'error', UNLOCKED: 'success', JAMMED: 'warning' }
+export const STATUS_COLORS = { ONLINE: 'success', OFFLINE: 'default', ERROR: 'error', MAINTENANCE: 'warning', INITIALIZING: 'processing' }
 
 export const errMsg = (err, fallback = 'Operation failed') =>
   err?.response?.data?.message || fallback

@@ -12,7 +12,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, useMemo } from 'react'
 import { getCameras, createCamera, updateCamera, deleteCamera, armCamera, disarmCamera } from '../../api/cameras'
 import { getSmartLocks, createSmartLock, updateSmartLock, deleteSmartLock, lockDevice, unlockDevice } from '../../api/smartlocks'
-import { errMsg, tabHeader, formFooter, PROTOCOLS, LOCK_COLORS, canManage, canOperate } from './constants'
+import { getRooms } from '../../api/rooms'
+import { errMsg, tabHeader, formFooter, PROTOCOLS, LOCK_COLORS, STATUS_COLORS, canManage, canOperate } from './constants'
 
 const { Text } = Typography
 
@@ -29,6 +30,7 @@ export default function DevicesTab({ homeId, myRole }) {
 
   const { data: cameras = [], isLoading: camLoading }  = useQuery({ queryKey: ['cameras', homeId], queryFn: () => getCameras(homeId) })
   const { data: locks   = [], isLoading: lockLoading } = useQuery({ queryKey: ['locks',   homeId], queryFn: () => getSmartLocks(homeId) })
+  const { data: rooms   = [] }                         = useQuery({ queryKey: ['rooms',   homeId], queryFn: () => getRooms(homeId) })
 
   const isLoading = camLoading || lockLoading
 
@@ -94,6 +96,12 @@ export default function DevicesTab({ homeId, myRole }) {
       title: 'Device ID', dataIndex: 'deviceName', key: 'deviceName',
       render: v => <Text code>{v}</Text>,
       sorter: (a, b) => a.deviceName.localeCompare(b.deviceName),
+    },
+    {
+      title: 'Status', dataIndex: 'status', key: 'status', width: 130,
+      render: v => <Badge status={STATUS_COLORS[v] ?? 'default'} text={v ?? '—'} />,
+      filters: Object.keys(STATUS_COLORS).map(s => ({ text: s, value: s })),
+      onFilter: (value, record) => record.status === value,
     },
     {
       title: 'Protocol', dataIndex: 'protocol', key: 'protocol',
@@ -198,7 +206,13 @@ export default function DevicesTab({ homeId, myRole }) {
         open={open} onCancel={closeModal} footer={null} destroyOnClose width={560}
       >
         {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
-        <Form form={form} layout="vertical" onFinish={handleSubmit} style={{ marginTop: 12 }}>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          style={{ marginTop: 12 }}
+          initialValues={{ motionDetection: false, nightVision: false, autoLock: false, tamperAlert: false }}
+        >
 
           {!editing && (
             <Form.Item name="_type" label="Device type" rules={[{ required: true, message: 'Select a type' }]}>
@@ -229,6 +243,14 @@ export default function DevicesTab({ homeId, myRole }) {
 
             <Form.Item name="protocol" label="Protocol" rules={[{ required: true, message: 'Required' }]}>
               <Select options={PROTOCOLS.map(p => ({ value: p, label: p }))} />
+            </Form.Item>
+
+            <Form.Item name="roomId" label="Room (optional)">
+              <Select
+                allowClear
+                placeholder="Assign to a room"
+                options={rooms.map(r => ({ value: r.id, label: r.roomName }))}
+              />
             </Form.Item>
 
             {deviceType === 'CAMERA' && <>
