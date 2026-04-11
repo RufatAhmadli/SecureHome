@@ -1,0 +1,26 @@
+services:
+
+  postgres:
+    image: postgres:15
+    container_name: securehome-postgres
+    environment:
+      POSTGRES_DB: ${JDBC_DATABASE}
+      POSTGRES_USER: ${JDBC_USERNAME}
+      POSTGRES_PASSWORD: ${JDBC_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: securehome-mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./tools/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
