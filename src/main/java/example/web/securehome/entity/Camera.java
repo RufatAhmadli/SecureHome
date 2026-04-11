@@ -22,4 +22,7 @@ public class Camera extends Device {
     private boolean nightVision;
 
     private String storageLocation;
+
+    @Column(nullable = false)
+    private boolean armed;
 }
