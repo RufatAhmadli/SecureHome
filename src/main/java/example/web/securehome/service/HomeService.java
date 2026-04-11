@@ -9,11 +9,13 @@ import example.web.securehome.enums.HomeMemberRole;
 import example.web.securehome.exception.custom.HomeAccessDeniedException;
 import example.web.securehome.exception.custom.HomeNameAlreadyExistsException;
 import example.web.securehome.exception.custom.UnauthorizedException;
+import example.web.securehome.event.HomeEvent;
 import example.web.securehome.mapper.HomeMapper;
 import example.web.securehome.repository.HomeRepository;
 import example.web.securehome.repository.MemberRepository;
 import example.web.securehome.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,7 @@ public class HomeService {
     private final HomeMapper homeMapper;
     private final SecurityUtils securityUtils;
     private final MemberRepository memberRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public HomeResponseDto findHome(Long id) {
@@ -68,6 +71,8 @@ public class HomeService {
                 .home(saved)
                 .build();
         memberRepository.save(homeMember);
+        eventPublisher.publishEvent(new HomeEvent(
+                currentUser.getEmail(), saved.getId(), saved.getName(), HomeEvent.Action.CREATED));
         return homeMapper.toHomeResponseDto(saved);
     }
 
@@ -84,7 +89,10 @@ public class HomeService {
 
         Home found = member.getHome();
         homeMapper.updateHomeEntity(found, homeRequestDto);
-        return homeMapper.toHomeResponseDto(homeRepository.save(found));
+        Home saved = homeRepository.save(found);
+        eventPublisher.publishEvent(new HomeEvent(
+                currentUser.getEmail(), saved.getId(), saved.getName(), HomeEvent.Action.UPDATED));
+        return homeMapper.toHomeResponseDto(saved);
     }
 
     @Transactional
@@ -97,6 +105,8 @@ public class HomeService {
             throw new UnauthorizedException("Only Owners can delete home.");
         }
 
+        eventPublisher.publishEvent(new HomeEvent(
+                currentUser.getEmail(), id, member.getHome().getName(), HomeEvent.Action.DELETED));
         homeRepository.deleteById(id);
     }
 }

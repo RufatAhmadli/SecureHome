@@ -14,4 +14,9 @@ public abstract class BaseAppEvent {
         this.actorEmail = actorEmail;
         this.occurredAt = LocalDateTime.now();
     }
+
+    public abstract Long getHomeId();
+    public abstract String getActionName();
+    public abstract String getCategory();
+    public abstract String describe();
 }

@@ -3,24 +3,24 @@ package example.web.securehome.event;
 import lombok.Getter;
 
 @Getter
-public class MemberEvent extends BaseAppEvent {
+public class HomeEvent extends BaseAppEvent {
 
-    public enum Action { ADDED, REMOVED, ROLE_CHANGED }
+    public enum Action { CREATED, UPDATED, DELETED }
 
     private final Long homeId;
-    private final String targetEmail;
+    private final String homeName;
     private final Action action;
 
-    public MemberEvent(String actorEmail, Long homeId, String targetEmail, Action action) {
+    public HomeEvent(String actorEmail, Long homeId, String homeName, Action action) {
         super(actorEmail);
         this.homeId = homeId;
-        this.targetEmail = targetEmail;
+        this.homeName = homeName;
         this.action = action;
     }
 
     @Override
     public String getCategory() {
-        return "MEMBER";
+        return "HOME";
     }
 
     @Override
@@ -30,6 +30,6 @@ public class MemberEvent extends BaseAppEvent {
 
     @Override
     public String describe() {
-        return getActorEmail() + " " + action.name().toLowerCase().replace("_", " ") + " member " + targetEmail;
+        return getActorEmail() + " " + action.name().toLowerCase() + " home " + homeName;
     }
 }

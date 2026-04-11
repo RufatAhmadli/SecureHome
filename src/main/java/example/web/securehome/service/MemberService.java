@@ -11,8 +11,10 @@ import example.web.securehome.mapper.MemberMapper;
 import example.web.securehome.repository.HomeRepository;
 import example.web.securehome.repository.MemberRepository;
 import example.web.securehome.repository.UserRepository;
+import example.web.securehome.event.MemberEvent;
 import example.web.securehome.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,7 @@ public class MemberService {
     private final UserRepository userRepository;
     private final HomeRepository homeRepository;
     private final SecurityUtils securityUtils;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public MemberResponseDto findMemberById(Long homeId, Long memberId) {
@@ -85,7 +88,10 @@ public class MemberService {
         }
 
         target.setRole(memberRequestDto.getRole());
-        return memberMapper.toMemberResponseDto(memberRepository.save(target));
+        MemberResponseDto result = memberMapper.toMemberResponseDto(memberRepository.save(target));
+        eventPublisher.publishEvent(new MemberEvent(
+                securityUtils.getCurrentUser().getEmail(), homeId, target.getUser().getEmail(), MemberEvent.Action.ROLE_CHANGED));
+        return result;
     }
 
     @Transactional
@@ -106,7 +112,10 @@ public class MemberService {
                 .home(home)
                 .role(memberRequestDto.getRole())
                 .build();
-        return memberMapper.toMemberResponseDto(memberRepository.save(member));
+        MemberResponseDto result = memberMapper.toMemberResponseDto(memberRepository.save(member));
+        eventPublisher.publishEvent(new MemberEvent(
+                securityUtils.getCurrentUser().getEmail(), homeId, email, MemberEvent.Action.ADDED));
+        return result;
     }
 
     @Transactional
@@ -116,7 +125,10 @@ public class MemberService {
         if (!member.getHome().getId().equals(homeId)) {
             throw new MemberHomeMismatchException(homeId, memberId);
         }
+        String targetEmail = member.getUser().getEmail();
         memberRepository.delete(member);
+        eventPublisher.publishEvent(new MemberEvent(
+                securityUtils.getCurrentUser().getEmail(), homeId, targetEmail, MemberEvent.Action.REMOVED));
     }
 
 }

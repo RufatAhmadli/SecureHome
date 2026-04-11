@@ -19,4 +19,19 @@ public class RoomEvent extends BaseAppEvent {
         this.roomName = roomName;
         this.action = action;
     }
+
+    @Override
+    public String getCategory() {
+        return "ROOM";
+    }
+
+    @Override
+    public String getActionName() {
+        return action.name();
+    }
+
+    @Override
+    public String describe() {
+        return getActorEmail() + " " + action.name().toLowerCase() + " room " + roomName;
+    }
 }
