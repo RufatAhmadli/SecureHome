@@ -64,7 +64,7 @@ public class SmartLockService extends DeviceService<SmartLock, SmartLockRequestD
     public SmartLockResponseDto updateLockStatus(Long id, LockStatus lockStatus) {
         SmartLock smartLock = smartLockRepository.findById(id)
                 .orElseThrow(() -> new DeviceNotFoundException(id));
-        verifyCanManageDevices(securityUtils.getCurrentUser(), smartLock.getHome().getId());
+        verifyCanOperateDevice(securityUtils.getCurrentUser(), smartLock.getHome().getId());
         smartLock.setLockStatus(lockStatus);
         return deviceMapper.toResponseDto(smartLockRepository.save(smartLock));
     }

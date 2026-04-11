@@ -1,6 +1,7 @@
 package example.web.securehome.service;
 
 import example.web.securehome.dto.request.MemberRequestDto;
+import example.web.securehome.dto.request.UpdateMemberRoleRequestDto;
 import example.web.securehome.dto.response.MemberResponseDto;
 import example.web.securehome.entity.Home;
 import example.web.securehome.entity.HomeMember;
@@ -72,30 +73,39 @@ public class MemberService {
     }
 
     @Transactional
-    public MemberResponseDto updateMemberRole(Long homeId, Long memberId, MemberRequestDto memberRequestDto) {
+    public MemberResponseDto updateMemberRole(Long homeId, Long memberId, UpdateMemberRoleRequestDto dto) {
         User currentUser = securityUtils.getCurrentUser();
+        HomeMember requester = requireOwnerOrAdmin(homeId, currentUser.getId());
+        HomeMember target    = resolveTarget(homeId, memberId);
 
-        HomeMember requester = memberRepository.findByHomeIdAndUserId(homeId, currentUser.getId())
-                .orElseThrow(HomeAccessDeniedException::new);
-        if (requester.getRole() != HomeMemberRole.OWNER && requester.getRole() != HomeMemberRole.ADMIN) {
-            throw new HomeAccessDeniedException();
+        HomeMemberRole newRole = dto.getRole();
+
+        if (newRole == HomeMemberRole.OWNER) {
+            if (requester.getRole() != HomeMemberRole.OWNER) {
+                throw new HomeAccessDeniedException("Only the owner can transfer ownership.");
+            }
+            requester.setRole(HomeMemberRole.ADMIN);
+            memberRepository.save(requester);
+        } else if (target.getRole() == HomeMemberRole.OWNER) {
+            throw new HomeAccessDeniedException("Cannot demote the owner. Transfer ownership first.");
         }
 
-        HomeMember target = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberNotFoundException(memberId));
-        if (!target.getHome().getId().equals(homeId)) {
-            throw new MemberHomeMismatchException(homeId, memberId);
-        }
-
-        target.setRole(memberRequestDto.getRole());
+        target.setRole(newRole);
         MemberResponseDto result = memberMapper.toMemberResponseDto(memberRepository.save(target));
         eventPublisher.publishEvent(new MemberEvent(
-                securityUtils.getCurrentUser().getEmail(), homeId, target.getUser().getEmail(), MemberEvent.Action.ROLE_CHANGED));
+                currentUser.getEmail(), homeId, target.getUser().getEmail(), MemberEvent.Action.ROLE_CHANGED));
         return result;
     }
 
     @Transactional
     public MemberResponseDto addMember(Long homeId, MemberRequestDto memberRequestDto) {
+        User currentUser = securityUtils.getCurrentUser();
+        requireOwnerOrAdmin(homeId, currentUser.getId());
+
+        if (memberRequestDto.getRole() == HomeMemberRole.OWNER) {
+            throw new HomeAccessDeniedException("Cannot assign the owner role when adding a member.");
+        }
+
         String email = memberRequestDto.getEmail();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(email));
@@ -114,21 +124,42 @@ public class MemberService {
                 .build();
         MemberResponseDto result = memberMapper.toMemberResponseDto(memberRepository.save(member));
         eventPublisher.publishEvent(new MemberEvent(
-                securityUtils.getCurrentUser().getEmail(), homeId, email, MemberEvent.Action.ADDED));
+                currentUser.getEmail(), homeId, email, MemberEvent.Action.ADDED));
         return result;
     }
 
     @Transactional
     public void deleteMember(Long homeId, Long memberId) {
-        HomeMember member = memberRepository.findById(memberId)
+        User currentUser = securityUtils.getCurrentUser();
+        requireOwnerOrAdmin(homeId, currentUser.getId());
+        HomeMember target = resolveTarget(homeId, memberId);
+
+        if (target.getRole() == HomeMemberRole.OWNER) {
+            throw new HomeAccessDeniedException("Cannot remove the owner. Transfer ownership first.");
+        }
+
+        String targetEmail = target.getUser().getEmail();
+        memberRepository.delete(target);
+        eventPublisher.publishEvent(new MemberEvent(
+                currentUser.getEmail(), homeId, targetEmail, MemberEvent.Action.REMOVED));
+    }
+
+    private HomeMember requireOwnerOrAdmin(Long homeId, Long userId) {
+        HomeMember requester = memberRepository.findByHomeIdAndUserId(homeId, userId)
+                .orElseThrow(HomeAccessDeniedException::new);
+        if (requester.getRole() != HomeMemberRole.OWNER && requester.getRole() != HomeMemberRole.ADMIN) {
+            throw new HomeAccessDeniedException();
+        }
+        return requester;
+    }
+
+    private HomeMember resolveTarget(Long homeId, Long memberId) {
+        HomeMember target = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberNotFoundException(memberId));
-        if (!member.getHome().getId().equals(homeId)) {
+        if (!target.getHome().getId().equals(homeId)) {
             throw new MemberHomeMismatchException(homeId, memberId);
         }
-        String targetEmail = member.getUser().getEmail();
-        memberRepository.delete(member);
-        eventPublisher.publishEvent(new MemberEvent(
-                securityUtils.getCurrentUser().getEmail(), homeId, targetEmail, MemberEvent.Action.REMOVED));
+        return target;
     }
 
 }

@@ -31,6 +31,9 @@ public class ActivityLogService {
         if (member.getRole() != HomeMemberRole.OWNER && member.getRole() != HomeMemberRole.ADMIN) {
             throw new HomeAccessDeniedException("Only Owners and Admins can view activity logs.");
         }
+        // TODO: Returns all logs at once — no pagination or filtering.
+        // When log volume grows, replace with a paginated + filtered response
+        // and consider a retention policy (e.g. purge records older than 90 days).
         return activityLogRepository.findAllByHomeIdOrderByOccurredAtDesc(homeId)
                 .stream()
                 .map(this::toDto)

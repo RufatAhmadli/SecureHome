@@ -62,7 +62,7 @@ public class CameraService extends DeviceService<Camera, CameraRequestDto, Camer
     @Transactional
     public CameraResponseDto arm(Long id) {
         Camera camera = cameraRepository.findById(id).orElseThrow(() -> new DeviceNotFoundException(id));
-        verifyCanManageDevices(securityUtils.getCurrentUser(), camera.getHome().getId());
+        verifyCanOperateDevice(securityUtils.getCurrentUser(), camera.getHome().getId());
         camera.setArmed(true);
         Camera saved = cameraRepository.save(camera);
         eventPublisher.publishEvent(new CameraEvent(
@@ -73,7 +73,7 @@ public class CameraService extends DeviceService<Camera, CameraRequestDto, Camer
     @Transactional
     public CameraResponseDto disarm(Long id) {
         Camera camera = cameraRepository.findById(id).orElseThrow(() -> new DeviceNotFoundException(id));
-        verifyCanManageDevices(securityUtils.getCurrentUser(), camera.getHome().getId());
+        verifyCanOperateDevice(securityUtils.getCurrentUser(), camera.getHome().getId());
         camera.setArmed(false);
         Camera saved = cameraRepository.save(camera);
         eventPublisher.publishEvent(new CameraEvent(

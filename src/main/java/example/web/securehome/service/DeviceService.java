@@ -158,6 +158,14 @@ public abstract class DeviceService<T extends Device, REQ extends DeviceRequestD
         }
     }
 
+    protected void verifyCanOperateDevice(User currentUser, Long homeId) {
+        HomeMember member = memberRepository.findByHomeIdAndUserId(homeId, currentUser.getId())
+                .orElseThrow(HomeAccessDeniedException::new);
+        if (!member.getRole().canOperateDevice()) {
+            throw new HomeAccessDeniedException("Guests cannot operate devices.");
+        }
+    }
+
     protected abstract List<T> findAllByRoomIdTyped(Long roomId);
 
     protected abstract List<T> findAllByHomeIdTyped(Long homeId);
