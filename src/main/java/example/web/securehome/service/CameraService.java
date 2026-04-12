@@ -70,7 +70,7 @@ public class CameraService extends DeviceService<Camera, CameraRequestDto, Camer
         camera.setArmed(armed);
         cameraRepository.save(camera);
         CameraEvent.Action action = armed ? CameraEvent.Action.ARMED : CameraEvent.Action.DISARMED;
-        eventPublisher.publishEvent(new CameraEvent("device", id, camera.getDisplayName(), camera.getHome().getId(), action));
+        eventPublisher.publishEvent(new CameraEvent(camera.getDisplayName(), id, camera.getDisplayName(), camera.getHome().getId(), action));
     }
 
     @Transactional

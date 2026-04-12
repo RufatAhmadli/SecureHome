@@ -81,7 +81,7 @@ public class SmartLockService extends DeviceService<SmartLock, SmartLockRequestD
         smartLockRepository.save(lock);
         SmartLockEvent.Action action = lockStatus == LockStatus.LOCKED
                 ? SmartLockEvent.Action.LOCKED : SmartLockEvent.Action.UNLOCKED;
-        eventPublisher.publishEvent(new SmartLockEvent("device", id, lock.getDisplayName(), lock.getHome().getId(), action));
+        eventPublisher.publishEvent(new SmartLockEvent(lock.getDisplayName(), id, lock.getDisplayName(), lock.getHome().getId(), action));
     }
 
     @Transactional
