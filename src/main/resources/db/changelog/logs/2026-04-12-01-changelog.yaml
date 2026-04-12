@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2026-04-12-seed-roles
+      author: user
+      changes:
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: role_name
+                  value: USER
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: role_name
+                  value: ADMIN
