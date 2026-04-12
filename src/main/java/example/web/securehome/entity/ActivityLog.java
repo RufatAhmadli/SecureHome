@@ -18,7 +18,7 @@ public class ActivityLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "actor_email", nullable = false)
     private String actor;
 
     @Column(nullable = false)
