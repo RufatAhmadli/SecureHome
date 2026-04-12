@@ -11,8 +11,8 @@ public class HomeEvent extends BaseAppEvent {
     private final String homeName;
     private final Action action;
 
-    public HomeEvent(String actorEmail, Long homeId, String homeName, Action action) {
-        super(actorEmail);
+    public HomeEvent(String actor, Long homeId, String homeName, Action action) {
+        super(actor);
         this.homeId = homeId;
         this.homeName = homeName;
         this.action = action;
@@ -30,6 +30,6 @@ public class HomeEvent extends BaseAppEvent {
 
     @Override
     public String describe() {
-        return getActorEmail() + " " + action.name().toLowerCase() + " home " + homeName;
+        return getActor() + " " + action.name().toLowerCase() + " home " + homeName;
     }
 }

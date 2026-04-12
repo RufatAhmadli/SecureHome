@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
  * <p>
  * Routing logic:
  * STATE_CHANGE → update device-specific state (lock status, armed flag, connectivity)
- * HEARTBEAT    → mark device ONLINE
+ * HEARTBEAT    → updateDeviceStatus(ONLINE)
  * TELEMETRY    → logged only (no DB state change for now)
  */
 @Slf4j
@@ -47,12 +47,13 @@ public class DeviceCommandRouter {
             log.warn(detail);
             eventPublisher.publishEvent(new SecurityEvent(
                     command.getHomeId(), SecurityEvent.Action.UNAUTHORIZED_DEVICE_COMMAND, detail));
+            broadcastToHome(command.getHomeId());
             return;
         }
 
         switch (command.getType()) {
             case STATE_CHANGE -> handleStateChange(command);
-            case HEARTBEAT -> markOnline(command.getDeviceId());
+            case HEARTBEAT -> updateDeviceStatus(command.getDeviceId(), DeviceStatus.ONLINE);
             case TELEMETRY -> log.debug("Telemetry for device {}: {}",
                     command.getDeviceId(), command.getPayload());
         }
@@ -72,10 +73,6 @@ public class DeviceCommandRouter {
             default -> log.warn("Unhandled action '{}' for device {}",
                     cmd.getAction(), cmd.getDeviceId());
         }
-    }
-
-    private void markOnline(Long deviceId) {
-        updateDeviceStatus(deviceId, DeviceStatus.ONLINE);
     }
 
     private void updateDeviceStatus(Long deviceId, DeviceStatus status) {

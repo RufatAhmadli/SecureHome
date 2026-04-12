@@ -15,7 +15,7 @@ public class ActivityLogListener {
     @EventListener
     public void onAnyEvent(BaseAppEvent event) {
         activityLogRepository.save(ActivityLog.builder()
-                .actorEmail(event.getActorEmail())
+                .actor(event.getActor())
                 .category(event.getCategory())
                 .action(event.getActionName())
                 .description(event.describe())

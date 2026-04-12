@@ -12,8 +12,8 @@ public class RoomEvent extends BaseAppEvent {
     private final String roomName;
     private final Action action;
 
-    public RoomEvent(String actorEmail, Long homeId, Long roomId, String roomName, Action action) {
-        super(actorEmail);
+    public RoomEvent(String actor, Long homeId, Long roomId, String roomName, Action action) {
+        super(actor);
         this.homeId = homeId;
         this.roomId = roomId;
         this.roomName = roomName;
@@ -32,6 +32,6 @@ public class RoomEvent extends BaseAppEvent {
 
     @Override
     public String describe() {
-        return getActorEmail() + " " + action.name().toLowerCase() + " room " + roomName;
+        return getActor() + " " + action.name().toLowerCase() + " room " + roomName;
     }
 }

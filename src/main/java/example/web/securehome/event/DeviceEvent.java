@@ -12,8 +12,8 @@ public class DeviceEvent<A extends Enum<A> & DeviceAction> extends BaseAppEvent 
     private final Long homeId;
     private final A action;
 
-    public DeviceEvent(String actorEmail, Long deviceId, String deviceName, Long homeId, A action) {
-        super(actorEmail);
+    public DeviceEvent(String actor, Long deviceId, String deviceName, Long homeId, A action) {
+        super(actor);
         this.deviceId = deviceId;
         this.deviceName = deviceName;
         this.homeId = homeId;
@@ -32,6 +32,6 @@ public class DeviceEvent<A extends Enum<A> & DeviceAction> extends BaseAppEvent 
 
     @Override
     public String describe() {
-        return getActorEmail() + " performed " + action.name() + " on device " + deviceName;
+        return getActor() + " performed " + action.name() + " on device " + deviceName;
     }
 }

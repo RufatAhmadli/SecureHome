@@ -43,7 +43,7 @@ public class ActivityLogService {
     private ActivityLogResponseDto toDto(ActivityLog log) {
         return ActivityLogResponseDto.builder()
                 .id(log.getId())
-                .actorEmail(log.getActorEmail())
+                .actor(log.getActor())
                 .category(log.getCategory())
                 .action(log.getAction())
                 .description(log.getDescription())

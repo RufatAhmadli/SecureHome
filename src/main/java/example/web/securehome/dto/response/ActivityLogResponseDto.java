@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Builder
 public class ActivityLogResponseDto {
     private Long id;
-    private String actorEmail;
+    private String actor;
     private String category;
     private String action;
     private String description;

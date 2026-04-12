@@ -15,6 +15,6 @@ public class SmartLockEvent extends DeviceEvent<SmartLockEvent.Action> {
 
     @Override
     public String describe() {
-        return getActorEmail() + " " + getAction().name().toLowerCase() + " device " + getDeviceName();
+        return getActor() + " " + getAction().name().toLowerCase() + " device " + getDeviceName();
     }
 }

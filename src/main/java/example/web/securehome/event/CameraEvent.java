@@ -15,6 +15,6 @@ public class CameraEvent extends DeviceEvent<CameraEvent.Action> {
 
     @Override
     public String describe() {
-        return getActorEmail() + " " + getAction().name().toLowerCase() + " camera " + getDeviceName();
+        return getActor() + " " + getAction().name().toLowerCase() + " camera " + getDeviceName();
     }
 }

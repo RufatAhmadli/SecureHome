@@ -11,8 +11,8 @@ public class MemberEvent extends BaseAppEvent {
     private final String targetEmail;
     private final Action action;
 
-    public MemberEvent(String actorEmail, Long homeId, String targetEmail, Action action) {
-        super(actorEmail);
+    public MemberEvent(String actor, Long homeId, String targetEmail, Action action) {
+        super(actor);
         this.homeId = homeId;
         this.targetEmail = targetEmail;
         this.action = action;
@@ -30,6 +30,6 @@ public class MemberEvent extends BaseAppEvent {
 
     @Override
     public String describe() {
-        return getActorEmail() + " " + action.name().toLowerCase().replace("_", " ") + " member " + targetEmail;
+        return getActor() + " " + action.name().toLowerCase().replace("_", " ") + " member " + targetEmail;
     }
 }

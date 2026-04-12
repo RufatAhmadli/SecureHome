@@ -7,11 +7,11 @@ import java.time.LocalDateTime;
 @Getter
 public abstract class BaseAppEvent {
 
-    private final String actorEmail;
+    private final String actor;
     private final LocalDateTime occurredAt;
 
-    protected BaseAppEvent(String actorEmail) {
-        this.actorEmail = actorEmail;
+    protected BaseAppEvent(String actor) {
+        this.actor = actor;
         this.occurredAt = LocalDateTime.now();
     }
 

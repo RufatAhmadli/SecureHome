@@ -86,19 +86,24 @@ public class SmartLockService extends DeviceService<SmartLock, SmartLockRequestD
 
     @Transactional
     public SmartLockResponseDto lock(Long id) {
-        SmartLockResponseDto result = updateLockStatus(id, LockStatus.LOCKED);
-        SmartLock smartLock = smartLockRepository.findById(id).orElseThrow(() -> new DeviceNotFoundException(id));
+        SmartLock lock = smartLockRepository.findById(id)
+                .orElseThrow(() -> new DeviceNotFoundException(id));
+        verifyCanOperateDevice(securityUtils.getCurrentUser(), lock.getHome().getId());
+        lock.setLockStatus(LockStatus.LOCKED);
+        smartLockRepository.save(lock);
         eventPublisher.publishEvent(new SmartLockEvent(
-                securityUtils.getCurrentUser().getEmail(), id, smartLock.getDisplayName(), smartLock.getHome().getId(), SmartLockEvent.Action.LOCKED));
-        return result;
+                securityUtils.getCurrentUser().getEmail(), id, lock.getDisplayName(), lock.getHome().getId(), SmartLockEvent.Action.LOCKED));
+        return deviceMapper.toResponseDto(lock);
     }
 
     @Transactional
     public SmartLockResponseDto unlock(Long id) {
-        SmartLockResponseDto result = updateLockStatus(id, LockStatus.UNLOCKED);
-        SmartLock smartLock = smartLockRepository.findById(id).orElseThrow(() -> new DeviceNotFoundException(id));
+        SmartLock lock = smartLockRepository.findById(id).orElseThrow(() -> new DeviceNotFoundException(id));
+        verifyCanOperateDevice(securityUtils.getCurrentUser(), lock.getHome().getId());
+        lock.setLockStatus(LockStatus.UNLOCKED);
+        smartLockRepository.save(lock);
         eventPublisher.publishEvent(new SmartLockEvent(
-                securityUtils.getCurrentUser().getEmail(), id, smartLock.getDisplayName(), smartLock.getHome().getId(), SmartLockEvent.Action.UNLOCKED));
-        return result;
+                securityUtils.getCurrentUser().getEmail(), id, lock.getDisplayName(), lock.getHome().getId(), SmartLockEvent.Action.UNLOCKED));
+        return deviceMapper.toResponseDto(lock);
     }
 }

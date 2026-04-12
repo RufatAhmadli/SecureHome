@@ -84,8 +84,8 @@ export default function ActivityLogTab({ homeId }) {
     },
     {
       title: 'Actor',
-      dataIndex: 'actorEmail',
-      key: 'actorEmail',
+      dataIndex: 'actor',
+      key: 'actor',
       width: 220,
       render: (val) => <Text type="secondary">{val}</Text>,
     },

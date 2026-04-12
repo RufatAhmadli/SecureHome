@@ -19,7 +19,7 @@ public class ActivityLog {
     private Long id;
 
     @Column(nullable = false)
-    private String actorEmail;
+    private String actor;
 
     @Column(nullable = false)
     private String category;   // DEVICE, MEMBER, ROOM, SECURITY

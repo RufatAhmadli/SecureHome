@@ -9,7 +9,7 @@ export default function useHomeSocket(homeId, onMessage) {
     if (!homeId) return
 
     const client = new Client({
-      brokerURL: `ws://localhost:8080/ws`,
+      brokerURL: `ws://${window.location.host}/ws`,
       reconnectDelay: 2000,
       onConnect: () => {
         client.subscribe(`/topic/home/${homeId}`, () => {
