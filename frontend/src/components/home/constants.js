@@ -1,7 +1,7 @@
 export const canManage  = (role) => role === 'OWNER' || role === 'ADMIN'
 export const canOperate = (role) => role === 'OWNER' || role === 'ADMIN' || role === 'MEMBER'
 
-export const PROTOCOLS    = ['WIFI', 'ZIGBEE', 'MQTT', 'BLUETOOTH', 'WEBSOCKET']
+export const PROTOCOLS    = ['MQTT', 'MATTER', 'HTTP']
 export const MEMBER_ROLES = ['OWNER', 'ADMIN', 'MEMBER', 'GUEST']
 export const ROLE_COLORS  = { OWNER: 'gold', ADMIN: 'blue', MEMBER: 'green', GUEST: 'default' }
 export const LOCK_COLORS   = { LOCKED: 'error', UNLOCKED: 'success', JAMMED: 'warning' }
