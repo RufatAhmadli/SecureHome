@@ -12,7 +12,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /** Test case 1: Register and Login
- *
  * Execution Steps:
  *   1. Send POST /api/v1/auth/register with valid firstName, lastName, email, and password
  *   2. Verify the user record exists in the DB and the password is stored hashed
