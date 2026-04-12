@@ -48,8 +48,7 @@ public class AuthService {
                 .orElseThrow(() -> new RoleNotFoundException("user"));
         request.addRole(userRole);
         request.setPassword(passwordEncoder.encode(dto.getPassword()));
-        User saved = userRepository.save(request);
-        return registerMapper.toRegisterResponseDto(saved);
+        return registerMapper.toRegisterResponseDto(userRepository.save(request));
     }
 
     @Transactional(readOnly = true)
@@ -73,7 +72,6 @@ public class AuthService {
     @Transactional
     public void deleteMyAccount() {
         User currentUser = securityUtils.getCurrentUser();
-        // Remove home memberships first to avoid FK constraint violations
         memberRepository.deleteAll(memberRepository.findAllByUserId(currentUser.getId()));
         userRepository.delete(currentUser);
     }
@@ -93,15 +91,10 @@ public class AuthService {
     @Transactional
     public LoginResponseDto login(LoginRequestDto dto) {
         Authentication authenticate = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        dto.getEmail(),
-                        dto.getPassword()
-                )
+                new UsernamePasswordAuthenticationToken(dto.getEmail(), dto.getPassword())
         );
         UserDetails userDetails = (UserDetails) authenticate.getPrincipal();
         String token = jwtService.generateToken(userDetails);
-        return LoginResponseDto.builder().token(token)
-                .email(userDetails.getUsername())
-                .build();
+        return LoginResponseDto.builder().token(token).email(userDetails.getUsername()).build();
     }
 }

@@ -1,6 +1,7 @@
 package example.web.securehome.controller;
 
 import example.web.securehome.dto.request.MemberRequestDto;
+import example.web.securehome.dto.request.UpdateMemberRoleRequestDto;
 import example.web.securehome.dto.response.MemberResponseDto;
 import example.web.securehome.service.MemberService;
 import jakarta.validation.Valid;
@@ -38,8 +39,8 @@ public class MemberController {
     }
 
     @PutMapping("/{homeId}/members/{memberId}")
-    public ResponseEntity<MemberResponseDto> updateMemberRole(@PathVariable Long homeId, @PathVariable Long memberId, @Valid @RequestBody MemberRequestDto memberRequestDto) {
-        return ResponseEntity.ok(memberService.updateMemberRole(homeId, memberId, memberRequestDto));
+    public ResponseEntity<MemberResponseDto> updateMemberRole(@PathVariable Long homeId, @PathVariable Long memberId, @Valid @RequestBody UpdateMemberRoleRequestDto dto) {
+        return ResponseEntity.ok(memberService.updateMemberRole(homeId, memberId, dto));
     }
 
     @DeleteMapping("/{homeId}/members/{memberId}")

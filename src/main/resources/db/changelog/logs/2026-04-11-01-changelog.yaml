@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1775858053163-1
+      author: user
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_activity_logs
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: actor_email
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: category
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: action
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: description
+                  type: VARCHAR(255)
+              - column:
+                  name: home_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: occurred_at
+                  type: DATETIME
+            tableName: activity_logs
+

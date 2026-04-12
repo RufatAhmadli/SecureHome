@@ -3,11 +3,11 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined } from '@ant-d
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { getMembers, addMember, updateMember, deleteMember } from '../../api/members'
-import { errMsg, tabHeader, formFooter, MEMBER_ROLES, ROLE_COLORS } from './constants'
+import { errMsg, tabHeader, formFooter, MEMBER_ROLES, ROLE_COLORS, canManage } from './constants'
 
 const { Text } = Typography
 
-export default function MembersTab({ homeId }) {
+export default function MembersTab({ homeId, myRole }) {
   const qc = useQueryClient()
   const [addOpen, setAddOpen]   = useState(false)
   const [roleOpen, setRoleOpen] = useState(false)
@@ -45,6 +45,17 @@ export default function MembersTab({ homeId }) {
     setEditing(m); roleForm.setFieldsValue({ role: m.role }); setError(null); setRoleOpen(true)
   }
 
+  const manage = canManage(myRole)
+
+  // OWNER role only appears in the change-role dropdown (for ownership transfer), never in add-member
+  const changeRoleOptions = MEMBER_ROLES
+    .filter(r => myRole === 'OWNER' || r !== 'OWNER')
+    .map(r => ({ value: r, label: r }))
+
+  const addRoleOptions = MEMBER_ROLES
+    .filter(r => r !== 'OWNER')
+    .map(r => ({ value: r, label: r }))
+
   const columns = [
     {
       title: 'Member', key: 'user',
@@ -66,9 +77,9 @@ export default function MembersTab({ homeId }) {
       filters: MEMBER_ROLES.map(r => ({ text: r, value: r })),
       onFilter: (value, record) => record.role === value,
     },
-    {
+    ...(manage ? [{
       title: 'Actions', key: 'actions', width: 100,
-      render: (_, row) => (
+      render: (_, row) => row.role === 'OWNER' ? null : (
         <Space>
           <Tooltip title="Change role"><Button type="text" icon={<EditOutlined />} onClick={() => openRoleEdit(row)} /></Tooltip>
           <Popconfirm title="Remove this member?" onConfirm={() => deleteMut.mutate(row.id)} okText="Remove" okButtonProps={{ danger: true }}>
@@ -76,7 +87,7 @@ export default function MembersTab({ homeId }) {
           </Popconfirm>
         </Space>
       ),
-    },
+    }] : []),
   ]
 
   return (
@@ -85,44 +96,46 @@ export default function MembersTab({ homeId }) {
 
       <div style={tabHeader}>
         <Text type="secondary">{members.length} member{members.length !== 1 ? 's' : ''}</Text>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => { setError(null); form.resetFields(); setAddOpen(true) }}>Add Member</Button>
+        {manage && <Button type="primary" icon={<PlusOutlined />} onClick={() => { setError(null); form.resetFields(); setAddOpen(true) }}>Add Member</Button>}
       </div>
 
       <Table dataSource={members} columns={columns} rowKey="id" loading={isLoading} pagination={false} locale={{ emptyText: 'No members yet' }} />
 
-      {/* Add member modal */}
-      <Modal title="Add Member" open={addOpen} onCancel={() => { setAddOpen(false); setError(null) }} footer={null} destroyOnClose>
-        {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
-        <Text type="secondary" style={{ display: 'block', marginBottom: 16, fontSize: 13 }}>
-          Enter the user's email address and assign a role.
-        </Text>
-        <Form form={form} layout="vertical" onFinish={v => addMut.mutate(v)}>
-          <Form.Item name="email" label="Email address" rules={[{ required: true, type: 'email', message: 'Enter a valid email' }]}>
-            <Input placeholder="user@example.com" />
-          </Form.Item>
-          <Form.Item name="role" label="Role" rules={[{ required: true, message: 'Required' }]}>
-            <Select options={MEMBER_ROLES.map(r => ({ value: r, label: r }))} placeholder="Select role" />
-          </Form.Item>
-          <div style={formFooter}>
-            <Button onClick={() => { setAddOpen(false); setError(null) }}>Cancel</Button>
-            <Button type="primary" htmlType="submit" loading={addMut.isPending}>Add</Button>
-          </div>
-        </Form>
-      </Modal>
+      {manage && <>
+        {/* Add member modal */}
+        <Modal title="Add Member" open={addOpen} onCancel={() => { setAddOpen(false); setError(null) }} footer={null} destroyOnClose>
+          {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
+          <Text type="secondary" style={{ display: 'block', marginBottom: 16, fontSize: 13 }}>
+            Enter the user's email address and assign a role.
+          </Text>
+          <Form form={form} layout="vertical" onFinish={v => addMut.mutate(v)}>
+            <Form.Item name="email" label="Email address" rules={[{ required: true, type: 'email', message: 'Enter a valid email' }]}>
+              <Input placeholder="user@example.com" />
+            </Form.Item>
+            <Form.Item name="role" label="Role" rules={[{ required: true, message: 'Required' }]}>
+              <Select options={addRoleOptions} placeholder="Select role" />
+            </Form.Item>
+            <div style={formFooter}>
+              <Button onClick={() => { setAddOpen(false); setError(null) }}>Cancel</Button>
+              <Button type="primary" htmlType="submit" loading={addMut.isPending}>Add</Button>
+            </div>
+          </Form>
+        </Modal>
 
-      {/* Change role modal */}
-      <Modal title="Change Role" open={roleOpen} onCancel={() => { setRoleOpen(false); setError(null) }} footer={null} destroyOnClose>
-        {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
-        <Form form={roleForm} layout="vertical" onFinish={v => updateMut.mutate({ memberId: editing.id, role: v.role })}>
-          <Form.Item name="role" label="New Role" rules={[{ required: true }]}>
-            <Select options={MEMBER_ROLES.map(r => ({ value: r, label: r }))} />
-          </Form.Item>
-          <div style={formFooter}>
-            <Button onClick={() => { setRoleOpen(false); setError(null) }}>Cancel</Button>
-            <Button type="primary" htmlType="submit" loading={updateMut.isPending}>Save</Button>
-          </div>
-        </Form>
-      </Modal>
+        {/* Change role modal */}
+        <Modal title="Change Role" open={roleOpen} onCancel={() => { setRoleOpen(false); setError(null) }} footer={null} destroyOnClose>
+          {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
+          <Form form={roleForm} layout="vertical" onFinish={v => updateMut.mutate({ memberId: editing.id, role: v.role })}>
+            <Form.Item name="role" label="New Role" rules={[{ required: true }]}>
+              <Select options={changeRoleOptions} />
+            </Form.Item>
+            <div style={formFooter}>
+              <Button onClick={() => { setRoleOpen(false); setError(null) }}>Cancel</Button>
+              <Button type="primary" htmlType="submit" loading={updateMut.isPending}>Save</Button>
+            </div>
+          </Form>
+        </Modal>
+      </>}
     </div>
   )
 }

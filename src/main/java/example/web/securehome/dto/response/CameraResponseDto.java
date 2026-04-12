@@ -16,4 +16,5 @@ public class CameraResponseDto extends DeviceResponseDto {
     private Boolean motionDetection;
     private Boolean nightVision;
     private String storageLocation;
+    private Boolean armed;
 }

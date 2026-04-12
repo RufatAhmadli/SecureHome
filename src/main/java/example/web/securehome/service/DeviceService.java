@@ -8,6 +8,7 @@ import example.web.securehome.entity.HomeMember;
 import example.web.securehome.entity.Room;
 import example.web.securehome.entity.User;
 import example.web.securehome.enums.DeviceStatus;
+import example.web.securehome.event.DeviceEvent;
 import example.web.securehome.exception.custom.DeviceNotFoundException;
 import example.web.securehome.exception.custom.HomeAccessDeniedException;
 import example.web.securehome.exception.custom.HomeNotFoundException;
@@ -17,6 +18,7 @@ import example.web.securehome.repository.HomeRepository;
 import example.web.securehome.repository.MemberRepository;
 import example.web.securehome.repository.RoomRepository;
 import example.web.securehome.util.SecurityUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -28,20 +30,23 @@ public abstract class DeviceService<T extends Device, REQ extends DeviceRequestD
     protected final DeviceMapper<T, REQ, RES> deviceMapper;
     protected final MemberRepository memberRepository;
     protected final SecurityUtils securityUtils;
+    protected final ApplicationEventPublisher eventPublisher;
 
     public DeviceService(RoomRepository roomRepository,
                          DeviceMapper<T, REQ, RES> deviceMapper,
                          HomeRepository homeRepository,
                          MemberRepository memberRepository,
-                         SecurityUtils securityUtils) {
+                         SecurityUtils securityUtils,
+                         ApplicationEventPublisher eventPublisher) {
         this.roomRepository = roomRepository;
         this.deviceMapper = deviceMapper;
         this.homeRepository = homeRepository;
         this.memberRepository = memberRepository;
         this.securityUtils = securityUtils;
+        this.eventPublisher = eventPublisher;
     }
 
-    @Transactional(readOnly = true)
+@Transactional(readOnly = true)
     public List<RES> findAllByRoomId(Long roomId) {
         User currentUser = securityUtils.getCurrentUser();
         Room room = roomRepository.findById(roomId)
@@ -84,7 +89,12 @@ public abstract class DeviceService<T extends Device, REQ extends DeviceRequestD
         device.setHome(home);
         device.setRoom(room);
         device.setStatus(DeviceStatus.INITIALIZING);
-        return deviceMapper.toResponseDto(saveTyped(device));
+        T saved = saveTyped(device);
+
+        eventPublisher.publishEvent(new DeviceEvent<>(
+                currentUser.getEmail(), saved.getId(), saved.getDisplayName(), home.getId(), DeviceEvent.Action.CREATED));
+
+        return deviceMapper.toResponseDto(saved);
     }
 
     @Transactional
@@ -100,7 +110,12 @@ public abstract class DeviceService<T extends Device, REQ extends DeviceRequestD
         Room room = resolveRoom(requestDto.getRoomId(), requestDto.getHomeId());
         deviceMapper.updateEntity(existingDevice, requestDto);
         existingDevice.setRoom(room);
-        return deviceMapper.toResponseDto(saveTyped(existingDevice));
+        T saved = saveTyped(existingDevice);
+
+        eventPublisher.publishEvent(new DeviceEvent<>(
+                currentUser.getEmail(), saved.getId(), saved.getDisplayName(), saved.getHome().getId(), DeviceEvent.Action.UPDATED));
+
+        return deviceMapper.toResponseDto(saved);
     }
 
     @Transactional
@@ -108,6 +123,10 @@ public abstract class DeviceService<T extends Device, REQ extends DeviceRequestD
         User currentUser = securityUtils.getCurrentUser();
         T existingDevice = findTypedDeviceById(id);
         verifyCanManageDevices(currentUser, existingDevice.getHome().getId());
+
+        eventPublisher.publishEvent(new DeviceEvent<>(
+                currentUser.getEmail(), existingDevice.getId(), existingDevice.getDisplayName(), existingDevice.getHome().getId(), DeviceEvent.Action.DELETED));
+
         deleteTyped(existingDevice);
     }
 
@@ -116,10 +135,7 @@ public abstract class DeviceService<T extends Device, REQ extends DeviceRequestD
     }
 
     private Room resolveRoom(Long roomId, Long homeId) {
-        if (roomId == null) {
-            return null;
-        }
-
+        if (roomId == null) return null;
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RoomNotFoundException(roomId));
         if (!room.getHome().getId().equals(homeId)) {
@@ -134,12 +150,19 @@ public abstract class DeviceService<T extends Device, REQ extends DeviceRequestD
         }
     }
 
-
     protected void verifyCanManageDevices(User currentUser, Long homeId) {
         HomeMember member = memberRepository.findByHomeIdAndUserId(homeId, currentUser.getId())
                 .orElseThrow(HomeAccessDeniedException::new);
         if (!member.getRole().canManageDevice()) {
             throw new HomeAccessDeniedException("Only Owners or Admins can manage devices.");
+        }
+    }
+
+    protected void verifyCanOperateDevice(User currentUser, Long homeId) {
+        HomeMember member = memberRepository.findByHomeIdAndUserId(homeId, currentUser.getId())
+                .orElseThrow(HomeAccessDeniedException::new);
+        if (!member.getRole().canOperateDevice()) {
+            throw new HomeAccessDeniedException("Guests cannot operate devices.");
         }
     }
 

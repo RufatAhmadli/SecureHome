@@ -13,8 +13,10 @@ import example.web.securehome.repository.HomeRepository;
 import example.web.securehome.mapper.RoomMapper;
 import example.web.securehome.repository.MemberRepository;
 import example.web.securehome.repository.RoomRepository;
+import example.web.securehome.event.RoomEvent;
 import example.web.securehome.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +30,7 @@ public class RoomService {
     private final HomeRepository homeRepository;
     private final SecurityUtils securityUtils;
     private final MemberRepository memberRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public RoomResponseDto findRoomById(Long id) {
@@ -76,7 +79,10 @@ public class RoomService {
         Room room = roomMapper.toRoomEntity(roomRequestDto);
         room.setHome(member.getHome());
 
-        return roomMapper.toRoomResponseDto(roomRepository.save(room));
+        RoomResponseDto result = roomMapper.toRoomResponseDto(roomRepository.save(room));
+        eventPublisher.publishEvent(new RoomEvent(
+                currentUser.getEmail(), homeId, result.getId(), room.getRoomName(), RoomEvent.Action.CREATED));
+        return result;
     }
 
     @Transactional
@@ -93,7 +99,10 @@ public class RoomService {
             throw new HomeAccessDeniedException("Only Owners or Admins can update rooms.");
 
         roomMapper.updateRoomEntity(room, roomRequestDto);
-        return roomMapper.toRoomResponseDto(roomRepository.save(room));
+        RoomResponseDto result = roomMapper.toRoomResponseDto(roomRepository.save(room));
+        eventPublisher.publishEvent(new RoomEvent(
+                currentUser.getEmail(), roomRequestDto.getHomeId(), id, room.getRoomName(), RoomEvent.Action.UPDATED));
+        return result;
     }
 
     @Transactional
@@ -108,6 +117,8 @@ public class RoomService {
         if (!member.getRole().canManageRoom())
             throw new HomeAccessDeniedException("Only Owners or Admins can delete rooms.");
 
+        eventPublisher.publishEvent(new RoomEvent(
+                currentUser.getEmail(), room.getHome().getId(), id, room.getRoomName(), RoomEvent.Action.DELETED));
         roomRepository.deleteById(id);
     }
 }

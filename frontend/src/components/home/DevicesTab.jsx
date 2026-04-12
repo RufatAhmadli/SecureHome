@@ -6,16 +6,19 @@ import {
 import {
   PlusOutlined, EditOutlined, DeleteOutlined,
   LockOutlined, UnlockOutlined, FilterOutlined,
+  EyeOutlined, EyeInvisibleOutlined,
 } from '@ant-design/icons'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, useMemo } from 'react'
-import { getCameras, createCamera, updateCamera, deleteCamera } from '../../api/cameras'
+import useHomeSocket from '../../hooks/useHomeSocket'
+import { getCameras, createCamera, updateCamera, deleteCamera, armCamera, disarmCamera } from '../../api/cameras'
 import { getSmartLocks, createSmartLock, updateSmartLock, deleteSmartLock, lockDevice, unlockDevice } from '../../api/smartlocks'
-import { errMsg, tabHeader, formFooter, PROTOCOLS, LOCK_COLORS } from './constants'
+import { getRooms } from '../../api/rooms'
+import { errMsg, tabHeader, formFooter, PROTOCOLS, LOCK_COLORS, STATUS_COLORS, canManage, canOperate } from './constants'
 
 const { Text } = Typography
 
-export default function DevicesTab({ homeId }) {
+export default function DevicesTab({ homeId, myRole }) {
   const qc = useQueryClient()
 
   const [typeFilter, setTypeFilter] = useState('ALL')
@@ -28,6 +31,7 @@ export default function DevicesTab({ homeId }) {
 
   const { data: cameras = [], isLoading: camLoading }  = useQuery({ queryKey: ['cameras', homeId], queryFn: () => getCameras(homeId) })
   const { data: locks   = [], isLoading: lockLoading } = useQuery({ queryKey: ['locks',   homeId], queryFn: () => getSmartLocks(homeId) })
+  const { data: rooms   = [] }                         = useQuery({ queryKey: ['rooms',   homeId], queryFn: () => getRooms(homeId) })
 
   const isLoading = camLoading || lockLoading
 
@@ -46,14 +50,18 @@ export default function DevicesTab({ homeId }) {
     qc.invalidateQueries({ queryKey: ['locks',   homeId] })
   }
 
+  useHomeSocket(homeId, invalidate)
+
   const createCamMut  = useMutation({ mutationFn: (v) => createCamera({ ...v, homeId }),              onSuccess: () => { invalidate(); closeModal() }, onError: e => setError(errMsg(e)) })
   const updateCamMut  = useMutation({ mutationFn: ({ id, v }) => updateCamera(id, { ...v, homeId }),  onSuccess: () => { invalidate(); closeModal() }, onError: e => setError(errMsg(e)) })
   const deleteCamMut  = useMutation({ mutationFn: deleteCamera,                                        onSuccess: invalidate,                           onError: e => setError(errMsg(e)) })
   const createLockMut = useMutation({ mutationFn: (v) => createSmartLock({ ...v, homeId }),            onSuccess: () => { invalidate(); closeModal() }, onError: e => setError(errMsg(e)) })
   const updateLockMut = useMutation({ mutationFn: ({ id, v }) => updateSmartLock(id, { ...v, homeId }),onSuccess: () => { invalidate(); closeModal() }, onError: e => setError(errMsg(e)) })
   const deleteLockMut = useMutation({ mutationFn: deleteSmartLock,                                     onSuccess: invalidate,                           onError: e => setError(errMsg(e)) })
-  const lockMut       = useMutation({ mutationFn: lockDevice,                                          onSuccess: invalidate,                           onError: e => setError(errMsg(e)) })
-  const unlockMut     = useMutation({ mutationFn: unlockDevice,                                        onSuccess: invalidate,                           onError: e => setError(errMsg(e)) })
+  const lockMut       = useMutation({ mutationFn: lockDevice,    onSuccess: invalidate, onError: e => setError(errMsg(e)) })
+  const unlockMut     = useMutation({ mutationFn: unlockDevice,  onSuccess: invalidate, onError: e => setError(errMsg(e)) })
+  const armMut        = useMutation({ mutationFn: armCamera,     onSuccess: invalidate, onError: e => setError(errMsg(e)) })
+  const disarmMut     = useMutation({ mutationFn: disarmCamera,  onSuccess: invalidate, onError: e => setError(errMsg(e)) })
 
   const openCreate = () => { setDeviceType(null); setEditing(null); form.resetFields(); setError(null); setOpen(true) }
   const openEdit   = (row) => { setDeviceType(row._type); setEditing(row); form.setFieldsValue({ ...row, roomId: row.room?.id }); setError(null); setOpen(true) }
@@ -73,6 +81,9 @@ export default function DevicesTab({ homeId }) {
 
   const isPending = createCamMut.isPending || updateCamMut.isPending || createLockMut.isPending || updateLockMut.isPending
 
+  const manage  = canManage(myRole)
+  const operate = canOperate(myRole)
+
   const columns = [
     {
       title: 'Type', dataIndex: '_type', key: '_type', width: 120,
@@ -90,6 +101,12 @@ export default function DevicesTab({ homeId }) {
       sorter: (a, b) => a.deviceName.localeCompare(b.deviceName),
     },
     {
+      title: 'Status', dataIndex: 'status', key: 'status', width: 130,
+      render: v => <Badge status={STATUS_COLORS[v] ?? 'default'} text={v ?? '—'} />,
+      filters: Object.keys(STATUS_COLORS).map(s => ({ text: s, value: s })),
+      onFilter: (value, record) => record.status === value,
+    },
+    {
       title: 'Protocol', dataIndex: 'protocol', key: 'protocol',
       render: v => <Tag>{v}</Tag>, width: 110,
       filters: PROTOCOLS.map(p => ({ text: p, value: p })),
@@ -102,6 +119,7 @@ export default function DevicesTab({ homeId }) {
           <Text type="secondary">{row.resolution}</Text>
           {row.motionDetection && <Tag color="orange">Motion</Tag>}
           {row.nightVision     && <Tag color="geekblue">Night</Tag>}
+          <Tag color={row.armed ? 'red' : 'default'}>{row.armed ? 'Armed' : 'Disarmed'}</Tag>
         </Space>
       ) : (
         <Space size={4}>
@@ -120,7 +138,7 @@ export default function DevicesTab({ homeId }) {
       title: 'Actions', key: 'actions', width: 150,
       render: (_, row) => (
         <Space>
-          {row._type === 'SMART_LOCK' && <>
+          {row._type === 'SMART_LOCK' && operate && <>
             <Tooltip title="Lock">
               <Button size="small" icon={<LockOutlined />} loading={lockMut.isPending} disabled={row.lockStatus === 'LOCKED'} onClick={() => lockMut.mutate(row.id)} />
             </Tooltip>
@@ -128,10 +146,20 @@ export default function DevicesTab({ homeId }) {
               <Button size="small" icon={<UnlockOutlined />} loading={unlockMut.isPending} disabled={row.lockStatus === 'UNLOCKED'} onClick={() => unlockMut.mutate(row.id)} />
             </Tooltip>
           </>}
-          <Tooltip title="Edit"><Button type="text" icon={<EditOutlined />} onClick={() => openEdit(row)} /></Tooltip>
-          <Popconfirm title="Delete this device?" onConfirm={() => handleDelete(row)} okText="Delete" okButtonProps={{ danger: true }}>
-            <Tooltip title="Delete"><Button type="text" danger icon={<DeleteOutlined />} /></Tooltip>
-          </Popconfirm>
+          {row._type === 'CAMERA' && operate && <>
+            <Tooltip title="Arm">
+              <Button size="small" icon={<EyeOutlined />} loading={armMut.isPending} disabled={row.armed} onClick={() => armMut.mutate(row.id)} />
+            </Tooltip>
+            <Tooltip title="Disarm">
+              <Button size="small" icon={<EyeInvisibleOutlined />} loading={disarmMut.isPending} disabled={!row.armed} onClick={() => disarmMut.mutate(row.id)} />
+            </Tooltip>
+          </>}
+          {manage && <>
+            <Tooltip title="Edit"><Button type="text" icon={<EditOutlined />} onClick={() => openEdit(row)} /></Tooltip>
+            <Popconfirm title="Delete this device?" onConfirm={() => handleDelete(row)} okText="Delete" okButtonProps={{ danger: true }}>
+              <Tooltip title="Delete"><Button type="text" danger icon={<DeleteOutlined />} /></Tooltip>
+            </Popconfirm>
+          </>}
         </Space>
       ),
     },
@@ -163,7 +191,7 @@ export default function DevicesTab({ homeId }) {
           />
           <Text type="secondary">{filtered.length} device{filtered.length !== 1 ? 's' : ''}</Text>
         </Space>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Add Device</Button>
+        {manage && <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>Add Device</Button>}
       </div>
 
       <Table
@@ -181,7 +209,13 @@ export default function DevicesTab({ homeId }) {
         open={open} onCancel={closeModal} footer={null} destroyOnClose width={560}
       >
         {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
-        <Form form={form} layout="vertical" onFinish={handleSubmit} style={{ marginTop: 12 }}>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          style={{ marginTop: 12 }}
+          initialValues={{ motionDetection: false, nightVision: false, autoLock: false, tamperAlert: false }}
+        >
 
           {!editing && (
             <Form.Item name="_type" label="Device type" rules={[{ required: true, message: 'Select a type' }]}>
@@ -212,6 +246,14 @@ export default function DevicesTab({ homeId }) {
 
             <Form.Item name="protocol" label="Protocol" rules={[{ required: true, message: 'Required' }]}>
               <Select options={PROTOCOLS.map(p => ({ value: p, label: p }))} />
+            </Form.Item>
+
+            <Form.Item name="roomId" label="Room (optional)">
+              <Select
+                allowClear
+                placeholder="Assign to a room"
+                options={rooms.map(r => ({ value: r.id, label: r.roomName }))}
+              />
             </Form.Item>
 
             {deviceType === 'CAMERA' && <>

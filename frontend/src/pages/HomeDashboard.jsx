@@ -1,12 +1,15 @@
 import { Typography, Button, Tabs, Spin, Alert, Breadcrumb } from 'antd'
-import { HomeOutlined, ArrowLeftOutlined, AppstoreOutlined, TeamOutlined, KeyOutlined } from '@ant-design/icons'
+import { HomeOutlined, ArrowLeftOutlined, AppstoreOutlined, TeamOutlined, KeyOutlined, HistoryOutlined } from '@ant-design/icons'
 import { useQuery } from '@tanstack/react-query'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getHome } from '../api/homes'
-import RoomsTab   from '../components/home/RoomsTab'
-import MembersTab from '../components/home/MembersTab'
-import DevicesTab from '../components/home/DevicesTab'
+import { getMyMemberships } from '../api/members'
+import RoomsTab       from '../components/home/RoomsTab'
+import MembersTab     from '../components/home/MembersTab'
+import DevicesTab     from '../components/home/DevicesTab'
+import ActivityLogTab from '../components/home/ActivityLogTab'
 import { errMsg } from '../components/home/constants'
+import useAuthStore from '../store/authStore'
 
 const { Title, Text } = Typography
 
@@ -14,11 +17,20 @@ export default function HomeDashboard() {
   const { homeId } = useParams()
   const navigate   = useNavigate()
   const id         = Number(homeId)
+  const user       = useAuthStore(s => s.user)
 
   const { data: home, isLoading, error } = useQuery({
     queryKey: ['home', id],
     queryFn:  () => getHome(id),
   })
+
+  const { data: myMemberships = [] } = useQuery({
+    queryKey: ['my-memberships'],
+    queryFn:  getMyMemberships,
+  })
+
+  const myRole      = myMemberships.find(m => m.homeId === id)?.role
+  const canViewLogs = myRole === 'OWNER' || myRole === 'ADMIN'
 
   if (isLoading) return <div style={styles.center}><Spin size="large" /></div>
 
@@ -32,6 +44,13 @@ export default function HomeDashboard() {
       />
     </div>
   )
+
+  const tabs = [
+    { key: 'rooms',   label: <span><AppstoreOutlined /> Rooms</span>,   children: <RoomsTab   homeId={id} myRole={myRole} /> },
+    { key: 'members', label: <span><TeamOutlined />     Members</span>, children: <MembersTab homeId={id} myRole={myRole} /> },
+    { key: 'devices', label: <span><KeyOutlined />      Devices</span>, children: <DevicesTab homeId={id} myRole={myRole} /> },
+    ...(canViewLogs ? [{ key: 'activity', label: <span><HistoryOutlined /> Activity Log</span>, children: <ActivityLogTab homeId={id} /> }] : []),
+  ]
 
   return (
     <div style={styles.page}>
@@ -59,15 +78,7 @@ export default function HomeDashboard() {
           </Text>
         )}
 
-        <Tabs
-          defaultActiveKey="rooms"
-          size="large"
-          items={[
-            { key: 'rooms',   label: <span><AppstoreOutlined /> Rooms</span>,   children: <RoomsTab   homeId={id} /> },
-            { key: 'members', label: <span><TeamOutlined />     Members</span>, children: <MembersTab homeId={id} /> },
-            { key: 'devices', label: <span><KeyOutlined />      Devices</span>, children: <DevicesTab homeId={id} /> },
-          ]}
-        />
+        <Tabs defaultActiveKey="rooms" size="large" items={tabs} />
       </main>
     </div>
   )

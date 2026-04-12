@@ -13,4 +13,8 @@ public enum HomeMemberRole {
     public boolean canManageDevice() {
         return this == OWNER || this == ADMIN;
     }
+
+    public boolean canOperateDevice() {
+        return this == OWNER || this == ADMIN || this == MEMBER;
+    }
 }

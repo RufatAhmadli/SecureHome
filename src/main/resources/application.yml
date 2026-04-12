@@ -8,6 +8,14 @@ spring:
     hibernate:
       ddl-auto: validate
 
+mqtt:
+  broker:
+    url: tcp://localhost:1883
+  client:
+    id: securehome-backend
+  topic:
+    subscribe: home/#
+
 jwt:
   secret: ${SECRET_KEY}
   expiration: ${EXPIRATION_TIME}
