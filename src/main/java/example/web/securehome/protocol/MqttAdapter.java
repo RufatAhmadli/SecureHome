@@ -40,6 +40,7 @@ public class MqttAdapter implements ProtocolAdapter {
             throw new IllegalArgumentException("Unrecognised MQTT topic format: " + raw.getTopic());
         }
 
+        long homeId   = Long.parseLong(matcher.group(1));
         long deviceId = Long.parseLong(matcher.group(3));
         String deviceType = matcher.group(2);  // lock, camera, device
         String event = matcher.group(4);  // status, telemetry, heartbeat
@@ -48,9 +49,10 @@ public class MqttAdapter implements ProtocolAdapter {
         CommandType type = resolveCommandType(event);
         String action = resolveAction(event, deviceType, payload);
 
-        log.debug("MQTT normalised → deviceId={} type={} action={}", deviceId, type, action);
+        log.debug("MQTT normalised → homeId={} deviceId={} type={} action={}", homeId, deviceId, type, action);
 
         return DeviceCommand.builder()
+                .homeId(homeId)
                 .deviceId(deviceId)
                 .deviceName(deviceType + "-" + deviceId)
                 .type(type)

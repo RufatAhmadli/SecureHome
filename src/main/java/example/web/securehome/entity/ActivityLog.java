@@ -30,7 +30,7 @@ public class ActivityLog {
     @Column(nullable = false)
     private String description;
 
-    private Long homeId;       // null for SECURITY events
+    private Long homeId;
 
     @Column(nullable = false)
     private LocalDateTime occurredAt;

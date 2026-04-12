@@ -14,7 +14,7 @@ import java.time.Instant;
  * Connects to the Mosquitto broker on startup and subscribes to all home device topics.
  * Every incoming MQTT message is wrapped in a RawMessage and passed through MqttAdapter
  * to produce a normalized DeviceCommand.
- *
+ * <p>
  * Topic subscription: home/#
  * Matches: home/{homeId}/{deviceType}/{deviceId}/{event}
  */
@@ -32,7 +32,7 @@ public class MqttSubscriber {
     @Value("${mqtt.topic.subscribe}")
     private String topicFilter;
 
-    private final MqttAdapter         mqttAdapter;
+    private final MqttAdapter mqttAdapter;
     private final DeviceCommandRouter commandRouter;
 
     private MqttClient client;
@@ -73,7 +73,7 @@ public class MqttSubscriber {
         } catch (MqttException e) {
             // App still starts — MQTT is non-critical for REST API operation
             log.warn("Could not connect to MQTT broker at {} — device messages will not be received. " +
-                     "Start the broker with: docker compose up -d  (reason: {})", brokerUrl, e.getMessage());
+                    "Start the broker with: docker compose up -d  (reason: {})", brokerUrl, e.getMessage());
         }
     }
 
@@ -94,7 +94,7 @@ public class MqttSubscriber {
             RawMessage raw = RawMessage.builder()
                     .topic(topic)
                     .payload(message.getPayload())
-                    .header("qos",    String.valueOf(message.getQos()))
+                    .header("qos", String.valueOf(message.getQos()))
                     .header("retain", String.valueOf(message.isRetained()))
                     .receivedAt(Instant.now())
                     .build();
@@ -104,7 +104,7 @@ public class MqttSubscriber {
             commandRouter.route(command);
 
         } catch (Exception e) {
-            log.error("Failed to process MQTT message on topic '{}': {}", topic, e.getMessage());
+            log.warn("Rejected MQTT message on topic '{}': {}", topic, e.getMessage());
         }
     }
 }

@@ -1,9 +1,10 @@
 import { Table, Tag, Alert, Typography, Button } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { getHomeActivityLogs } from '../../api/activityLogs'
 import { errMsg } from './constants'
+import useHomeSocket from '../../hooks/useHomeSocket'
 
 const { Text } = Typography
 
@@ -14,22 +15,26 @@ const CATEGORY_COLORS = {
   CAMERA:     'cyan',
   MEMBER:     'green',
   ROOM:       'purple',
+  SECURITY:   'red',
 }
 
 const ACTION_COLORS = {
-  CREATED:      'success',
-  UPDATED:      'processing',
-  DELETED:      'error',
-  LOCKED:       'warning',
-  UNLOCKED:     'success',
-  ARMED:        'error',
-  DISARMED:     'default',
-  ADDED:        'success',
-  REMOVED:      'error',
-  ROLE_CHANGED: 'processing',
+  CREATED:                      'success',
+  UPDATED:                      'processing',
+  DELETED:                      'error',
+  LOCKED:                       'warning',
+  UNLOCKED:                     'success',
+  ARMED:                        'error',
+  DISARMED:                     'default',
+  ADDED:                        'success',
+  REMOVED:                      'error',
+  ROLE_CHANGED:                 'processing',
+  UNAUTHORIZED_DEVICE_COMMAND:  'error',
 }
 
 export default function ActivityLogTab({ homeId }) {
+  const qc = useQueryClient()
+
   // TODO: All logs are fetched at once and paginated client-side.
   // When log volume grows, switch to server-side pagination — pass page/size params
   // to the API and drive the table's onChange to trigger new fetches.
@@ -38,6 +43,8 @@ export default function ActivityLogTab({ homeId }) {
     queryFn:         () => getHomeActivityLogs(homeId),
     refetchInterval: 30_000,
   })
+
+  useHomeSocket(homeId, () => qc.invalidateQueries({ queryKey: ['activity-logs', homeId] }))
 
   const categoryFilters = useMemo(
     () => [...new Set(logs.map(l => l.category))].sort().map(c => ({ text: c, value: c })),

@@ -11,10 +11,14 @@ import java.util.Map;
 @Builder
 public class RawMessage {
 
-    /** MQTT topic path or equivalent protocol address. */
+    /**
+     * MQTT topic path or equivalent protocol address.
+     */
     private final String topic;
 
-    /** Raw message bytes. The adapter is responsible for parsing. */
+    /**
+     * Raw message bytes. The adapter is responsible for parsing.
+     */
     private final byte[] payload;
 
     /**
@@ -24,6 +28,8 @@ public class RawMessage {
     @Singular("header")
     private final Map<String, String> headers;
 
-    /** Timestamp when the broker received this message. */
+    /**
+     * Timestamp when the broker received this message.
+     */
     private final Instant receivedAt;
 }

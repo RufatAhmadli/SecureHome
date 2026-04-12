@@ -10,6 +10,7 @@ import {
 } from '@ant-design/icons'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, useMemo } from 'react'
+import useHomeSocket from '../../hooks/useHomeSocket'
 import { getCameras, createCamera, updateCamera, deleteCamera, armCamera, disarmCamera } from '../../api/cameras'
 import { getSmartLocks, createSmartLock, updateSmartLock, deleteSmartLock, lockDevice, unlockDevice } from '../../api/smartlocks'
 import { getRooms } from '../../api/rooms'
@@ -48,6 +49,8 @@ export default function DevicesTab({ homeId, myRole }) {
     qc.invalidateQueries({ queryKey: ['cameras', homeId] })
     qc.invalidateQueries({ queryKey: ['locks',   homeId] })
   }
+
+  useHomeSocket(homeId, invalidate)
 
   const createCamMut  = useMutation({ mutationFn: (v) => createCamera({ ...v, homeId }),              onSuccess: () => { invalidate(); closeModal() }, onError: e => setError(errMsg(e)) })
   const updateCamMut  = useMutation({ mutationFn: ({ id, v }) => updateCamera(id, { ...v, homeId }),  onSuccess: () => { invalidate(); closeModal() }, onError: e => setError(errMsg(e)) })
