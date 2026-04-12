@@ -3,7 +3,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined } from '@ant-d
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { getMembers, addMember, updateMember, deleteMember } from '../../api/members'
-import { errMsg, tabHeader, formFooter, MEMBER_ROLES, ROLE_COLORS, canManage } from './constants'
+import { errMsg, tabHeader, formFooter, MEMBER_ROLES, ROLE_COLORS, canManage, canManageMembers } from './constants'
 
 const { Text } = Typography
 
@@ -45,7 +45,8 @@ export default function MembersTab({ homeId, myRole }) {
     setEditing(m); roleForm.setFieldsValue({ role: m.role }); setError(null); setRoleOpen(true)
   }
 
-  const manage = canManage(myRole)
+  const manage       = canManage(myRole)
+  const manageMembers = canManageMembers(myRole)
 
   // OWNER role only appears in the change-role dropdown (for ownership transfer), never in add-member
   const changeRoleOptions = MEMBER_ROLES
@@ -77,7 +78,7 @@ export default function MembersTab({ homeId, myRole }) {
       filters: MEMBER_ROLES.map(r => ({ text: r, value: r })),
       onFilter: (value, record) => record.role === value,
     },
-    ...(manage ? [{
+    ...(manageMembers ? [{
       title: 'Actions', key: 'actions', width: 100,
       render: (_, row) => row.role === 'OWNER' ? null : (
         <Space>

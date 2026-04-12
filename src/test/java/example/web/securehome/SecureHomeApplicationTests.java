@@ -1,13 +1,11 @@
 package example.web.securehome;
 
+import example.web.securehome.integration.BaseIntegrationTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class SecureHomeApplicationTests {
+class SecureHomeApplicationTests extends BaseIntegrationTest {
 
     @Test
     void contextLoads() {
     }
-
 }

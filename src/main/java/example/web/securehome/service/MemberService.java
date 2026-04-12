@@ -75,8 +75,8 @@ public class MemberService {
     @Transactional
     public MemberResponseDto updateMemberRole(Long homeId, Long memberId, UpdateMemberRoleRequestDto dto) {
         User currentUser = securityUtils.getCurrentUser();
-        HomeMember requester = requireOwnerOrAdmin(homeId, currentUser.getId());
-        HomeMember target    = resolveTarget(homeId, memberId);
+        HomeMember requester = requireOwner(homeId, currentUser.getId());
+        HomeMember target = resolveTarget(homeId, memberId);
 
         HomeMemberRole newRole = dto.getRole();
 
@@ -131,7 +131,7 @@ public class MemberService {
     @Transactional
     public void deleteMember(Long homeId, Long memberId) {
         User currentUser = securityUtils.getCurrentUser();
-        requireOwnerOrAdmin(homeId, currentUser.getId());
+        requireOwner(homeId, currentUser.getId());
         HomeMember target = resolveTarget(homeId, memberId);
 
         if (target.getRole() == HomeMemberRole.OWNER) {
@@ -144,13 +144,21 @@ public class MemberService {
                 currentUser.getEmail(), homeId, targetEmail, MemberEvent.Action.REMOVED));
     }
 
-    private HomeMember requireOwnerOrAdmin(Long homeId, Long userId) {
+    private HomeMember requireOwner(Long homeId, Long userId) {
+        HomeMember requester = memberRepository.findByHomeIdAndUserId(homeId, userId)
+                .orElseThrow(HomeAccessDeniedException::new);
+        if (requester.getRole() != HomeMemberRole.OWNER) {
+            throw new HomeAccessDeniedException("Only the owner can perform this action.");
+        }
+        return requester;
+    }
+
+    private void requireOwnerOrAdmin(Long homeId, Long userId) {
         HomeMember requester = memberRepository.findByHomeIdAndUserId(homeId, userId)
                 .orElseThrow(HomeAccessDeniedException::new);
         if (requester.getRole() != HomeMemberRole.OWNER && requester.getRole() != HomeMemberRole.ADMIN) {
             throw new HomeAccessDeniedException();
         }
-        return requester;
     }
 
     private HomeMember resolveTarget(Long homeId, Long memberId) {
