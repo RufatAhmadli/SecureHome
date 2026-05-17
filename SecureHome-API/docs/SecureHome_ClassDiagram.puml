@@ -1,0 +1,182 @@
+@startuml SecureHome_ClassDiagram
+title SecureHome — Domain Class Diagram (target / full product)
+
+skinparam dpi 150
+skinparam shadowing false
+skinparam linetype ortho
+skinparam roundcorner 8
+
+skinparam class {
+  BackgroundColor white
+  BorderColor #2E9E9E
+  FontColor #1a1a1a
+  HeaderBackgroundColor #E8F6F6
+}
+skinparam arrow {
+  Color #888888
+  Thickness 1
+}
+
+left to right direction
+
+abstract class AuditableEntity <<abstract>> {
+  - createdAt : LocalDateTime
+  - updatedAt : LocalDateTime
+  - createdBy : string
+  - updatedBy : string
+}
+
+class User {
+  - id : long
+  - firstName : string
+  - lastName : string
+  - email : string
+  - password : string
+  --
+  + register() : bool
+  + authenticate(password : string) : bool
+  + updateProfile(profile : UserProfile) : void
+  + addGlobalRole(role : Role) : void
+}
+
+class UserProfile {
+  - id : long
+  - address : string
+  - city : string
+  - timezone : string
+  - phoneNumber : string
+  - birthDate : date
+  - emailNotifications : bool
+  - smsNotifications : bool
+  --
+  + updateContactInfo() : void
+}
+
+class Role {
+  - id : long
+  - roleName : string
+}
+
+class HomeMember {
+  - id : long
+  - homeRole : string
+  --
+  + changeRole(newRole : string) : void
+}
+
+class Home {
+  - id : long
+  - name : string
+  - address : string
+  - city : string
+  - description : string
+  - timezone : string
+  --
+  + addRoom(room : Room) : void
+  + addDevice(device : Device) : void
+}
+
+class Room {
+  - id : long
+  - roomName : string
+  - floor : int
+  - description : string
+  --
+  + assignDevice(device : Device) : void
+}
+
+abstract class Device <<abstract>> {
+  - id : long
+  - deviceName : string
+  - displayName : string
+  - protocol : string
+  - status : string
+  --
+  + setStatus(status : string) : void
+  + relocateTo(room : Room) : void
+}
+
+class Camera {
+  - resolution : string
+  - motionDetection : bool
+  - nightVision : bool
+  - storageLocation : string
+  --
+  + snapshot() : byte[]
+}
+
+class SmartLock {
+  - lockStatus : string
+  - autoLock : bool
+  - autoLockDelaySeconds : int
+  - tamperAlert : bool
+  --
+  + lock() : void
+  + unlock(actorUserId : long) : void
+}
+
+class Event {
+  - id : long
+  - eventType : string
+  - severity : string
+  - triggeredAt : LocalDateTime
+  - payload : string
+  --
+  + isDeviceEvent() : bool
+}
+
+class Notification {
+  - id : long
+  - channel : string
+  - title : string
+  - body : string
+  - readAt : LocalDateTime
+  - createdAt : LocalDateTime
+  --
+  + markAsRead() : void
+}
+
+class ActivityLog {
+  - id : long
+  - actionType : string
+  - occurredAt : LocalDateTime
+  - details : string
+  - ipAddress : string
+  --
+  + redactSensitive() : void
+}
+
+AuditableEntity <|-- User
+AuditableEntity <|-- UserProfile
+AuditableEntity <|-- HomeMember
+AuditableEntity <|-- Home
+AuditableEntity <|-- Room
+AuditableEntity <|-- Device
+AuditableEntity <|-- Event
+AuditableEntity <|-- Notification
+AuditableEntity <|-- ActivityLog
+
+Device <|-- Camera
+Device <|-- SmartLock
+
+User "1" -- "0..1" UserProfile
+User "0..*" -- "0..*" Role
+User "1" -- "0..*" HomeMember
+Home "1" -- "0..*" HomeMember
+Home "1" -- "0..*" Room
+Home "1" -- "0..*" Device
+Room "0..1" -- "0..*" Device
+
+Home "1" -- "0..*" Event
+Device "0..1" -- "0..*" Event
+User "0..1" -- "0..*" Event
+
+User "1" -- "0..*" Notification
+Home "0..1" -- "0..*" Notification
+Event "0..1" -- "0..*" Notification
+
+Home "1" -- "0..*" ActivityLog
+User "0..1" -- "0..*" ActivityLog
+Device "0..1" -- "0..*" ActivityLog
+
+@enduml

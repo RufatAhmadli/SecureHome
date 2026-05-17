@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: will-be-overridden-by-testcontainers
+    username: test
+    password: test
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+jwt:
+  secret: dGVzdHNlY3JldGtleXRoYXRpc2xvbmVub3VnaGZvcmhtYWNzaGEyNTZhbGdvcml0aG0=
+  expiration: 3600000
+
+mqtt:
+  broker:
+    url: tcp://localhost:1883
+  client:
+    id: securehome-test
+  topic:
+    subscribe: home/#

@@ -1,0 +1,150 @@
+%% SecureHome — class diagram (target product, simplified)
+%% Export: npx @mermaid-js/mermaid-cli -i SecureHome_Class_Diagram.mmd -o SecureHome_Class_Diagram.png -w 2800 -H 2200 -b white
+
+classDiagram
+  direction TB
+
+  class User {
+    -long id
+    -string firstName
+    -string lastName
+    -string email
+    -string passwordHash
+    +register() bool
+    +authenticate() bool
+  }
+
+  class UserProfile {
+    -long id
+    -string phoneNumber
+    -string city
+    -string address
+    -string timezone
+    -date birthDate
+    -boolean emailNotifications
+    -boolean smsNotifications
+    +updateProfile() void
+  }
+
+  class Role {
+    -long id
+    -string roleName
+  }
+
+  class Home {
+    -long id
+    -string name
+    -string address
+    -string city
+    -string description
+    -string timezone
+    +addRoom() void
+    +addMember() void
+  }
+
+  class HomeMember {
+    -long id
+    -string homeRole
+    -datetime joinedAt
+    +changeRole() void
+  }
+
+  class Room {
+    -long id
+    -string roomName
+    -int floor
+    -string description
+    +assignDevice() void
+  }
+
+  class Device {
+    <<abstract>>
+    -long id
+    -string deviceName
+    -string displayName
+    -string protocol
+    -string status
+    +setStatus() void
+  }
+
+  class Camera {
+    -string resolution
+    -boolean nightVision
+    -boolean motionDetection
+    -string storageLocation
+    +captureSnapshot() void
+  }
+
+  class SmartLock {
+    -string lockStatus
+    -boolean autoLock
+    -int autoLockDelaySeconds
+    -boolean tamperAlert
+    +lock() void
+    +unlock() void
+  }
+
+  class Event {
+    -long id
+    -string eventType
+    -string severity
+    -datetime triggeredAt
+    -string payload
+  }
+
+  class Notification {
+    -long id
+    -string channel
+    -string title
+    -string body
+    -datetime readAt
+    -datetime createdAt
+    +markRead() void
+  }
+
+  class ActivityLog {
+    -long id
+    -string actionType
+    -datetime occurredAt
+    -string details
+    -string ipAddress
+  }
+
+  class AutomationRule {
+    -long id
+    -string name
+    -boolean enabled
+    -int priority
+    -string triggerSpec
+    -string actionSpec
+    +evaluate() bool
+  }
+
+  class RuleDeviceLink {
+    -long ruleId
+    -long deviceId
+  }
+
+  Device <|-- Camera
+  Device <|-- SmartLock
+
+  User "1" --> "0..1" UserProfile
+  User "0..*" --> "0..*" Role
+  User "1" --> "0..*" HomeMember
+  Home "1" --> "0..*" HomeMember
+  Home "1" --> "0..*" Room
+  Home "1" --> "0..*" Device
+  Device "0..*" --> "0..1" Room
+  User "0..1" --> "0..*" Event
+  Device "0..1" --> "0..*" Event
+  Home "1" --> "0..*" Event
+  User "1" --> "0..*" Notification
+  Home "0..1" --> "0..*" Notification
+  Event "0..1" --> "0..*" Notification
+  Home "1" --> "0..*" ActivityLog
+  User "0..1" --> "0..*" ActivityLog
+  Device "0..1" --> "0..*" ActivityLog
+  Home "1" --> "0..*" AutomationRule
+  User "1" --> "0..*" AutomationRule
+  AutomationRule "1" --> "0..*" RuleDeviceLink
+  Device "1" --> "0..*" RuleDeviceLink
